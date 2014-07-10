@@ -62,16 +62,15 @@ defmodule Benchfella do
     |> Enum.each(fn {name, n, musec, mem_stats} ->
       :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len, name, n, musec])
       if collect_mem_stats do
-        print_mem_stats(mem_stats, sys_mem_stats)
+        print_mem_stats(n, mem_stats, sys_mem_stats)
       end
     end)
   end
 
-  defp print_mem_stats({mem_before, mem_after, mem_after_gc,
+  defp print_mem_stats(n, {mem_before, mem_after, mem_after_gc,
                   mem_bin_before, mem_atom_before, mem_bin_after, mem_atom_after},
                 show_sys)
   do
-    diff_proc = b2kib(mem_after-mem_before)
     str_initial = "  mem initial:  #{mem_before}"
     if show_sys do
       str_initial = str_initial
@@ -88,11 +87,12 @@ defmodule Benchfella do
     end
     IO.puts str_after
 
-    str_diff = "  mem diff:     #{diff_proc} KiB"
+    diff_proc = Float.round((mem_after-mem_before) / n, 2)
+    str_diff = "  mem diff:     #{diff_proc} bytes/op"
     if show_sys do
-      diff_sys = b2kib(mem_bin_after - mem_bin_before + mem_atom_after - mem_atom_before)
+      diff_sys = Float.round((mem_bin_after-mem_bin_before + mem_atom_after-mem_atom_before) / n, 2)
       str_diff = str_diff
-                 <> " proc, #{diff_sys} KiB sys"
+                 <> " proc, #{diff_sys} bytes/op sys"
     end
     IO.puts str_diff
 
