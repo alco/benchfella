@@ -21,28 +21,39 @@ defmodule Benchfella do
 
     System.at_exit(fn _ ->
       run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
+        Keyword.get(opts, :verbose, true),
         collect_mem_stats,
         sys_mem_stats)
     end)
   end
 
   defp sec2musec(sec), do: trunc(sec * 1_000_000)
+  defp musec2sec(musec), do: Float.round(musec/1_000_000, 2)
 
-  def run(bench_time, mem_stats, sys_mem_stats) do
+  def run(bench_time, verbose, mem_stats, sys_mem_stats) do
+    if verbose do
+      IO.puts "Settings:"
+      IO.puts "  duration:      #{musec2sec(bench_time)} s"
+      IO.puts "  mem stats:     #{mem_stats}"
+      IO.puts "  sys mem stats: #{sys_mem_stats}"
+      IO.puts ""
+    end
     :ets.new(@results_tab, [:named_table, :set])
     bench_count = :ets.info(@bench_tab, :size)
     bench_config = {bench_time, mem_stats}
     {total_time, _, _} =
-      :ets.foldl(&run_bench(&1, &2, bench_config), {0, 1, bench_count}, @bench_tab)
+      :ets.foldl(&run_bench(&1, &2, verbose, bench_config), {0, 1, bench_count}, @bench_tab)
     {results, max_len} = :ets.foldl(&collect_results/2, {[], 0}, @results_tab)
 
-    IO.puts ""
+    if verbose do
+      sec = Float.round(total_time / 1_000_000, 2)
+      IO.puts "Finished in #{sec} seconds"
+      IO.puts ""
+    end
+
     #:io.format('~*.s ~10s   time~n', [-max_len, "benchmark", "iterations"])
     #IO.puts ""
     print_results(results, max_len, mem_stats, sys_mem_stats)
-    sec = Float.round(total_time / 1_000_000, 2)
-    if not mem_stats, do: IO.puts ""
-    IO.puts "Finished in #{sec} seconds"
   end
 
   defp print_results(results, max_len, collect_mem_stats, sys_mem_stats) do
@@ -81,7 +92,7 @@ defmodule Benchfella do
     if show_sys do
       diff_sys = b2kib(mem_bin_after - mem_bin_before + mem_atom_after - mem_atom_before)
       str_diff = str_diff
-                 <> " proc + #{diff_sys} KiB sys"
+                 <> " proc, #{diff_sys} KiB sys"
     end
     IO.puts str_diff
 
@@ -94,8 +105,10 @@ defmodule Benchfella do
 
   defp b2kib(bytes), do: Float.round(bytes/1024, 2)
 
-  defp run_bench({{mod, func}}, {total_time, i, count}, config) do
-    IO.puts "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
+  defp run_bench({{mod, func}}, {total_time, i, count}, follow, config) do
+    if follow do
+      IO.puts "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
+    end
     {elapsed, _} = :timer.tc(fn ->
       {n, elapsed, mem_stats} = measure_func(mod, func, config)
       :ets.insert(@results_tab, {{mod, func}, n, elapsed, mem_stats})
