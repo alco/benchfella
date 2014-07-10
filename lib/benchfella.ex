@@ -20,11 +20,13 @@ defmodule Benchfella do
     {total_time, _, _} = :ets.foldl(&run_bench/2, {0, 1, bench_count}, @bench_tab)
     {results, max_len} = :ets.foldl(&collect_results/2, {[], 0}, @results_tab)
 
-    IO.puts "---"
+    IO.puts ""
+    #:io.format('~*.s ~10s   time~n', [-max_len, "benchmark", "iterations"])
+    #IO.puts ""
     print_results(results, max_len)
-    IO.puts "---"
+    IO.puts ""
     sec = Float.round(total_time / 1_000_000, 2)
-    IO.puts "Total running time: #{sec} s"
+    IO.puts "Finished in #{sec} seconds"
   end
 
   defp print_results(results, max_len) do
