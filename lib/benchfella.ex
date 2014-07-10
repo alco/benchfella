@@ -134,14 +134,33 @@ defmodule Benchfella do
   end
 
   defmacro bench(name, [do: body]) do
-    func_name = String.to_atom(name)
-    :ets.insert(@bench_tab, {{__CALLER__.module, func_name}})
-    quote do
-      def unquote(func_name)(n) do
-        Enum.each(1..n, fn _ ->
-          unquote(body)
-        end)
+    quote bind_quoted: [name: name, tab: @bench_tab] do
+      name = String.to_atom(name)
+      :ets.insert(tab, {{__MODULE__, name}})
+
+      def unquote(name)(n) do
+        Enum.each(1..n, fn _ -> unquote(body) end)
       end
-    end
+    end |> replace_body(body)
+  end
+
+  defp replace_body({:unquote, _, [{:body, _, _}]}, body) do
+    body
+  end
+
+  defp replace_body({f, meta, args}, body) do
+    {replace_body(f, body), meta, replace_body(args, body)}
+  end
+
+  defp replace_body({a, b}, body) do
+    {replace_body(a, body), replace_body(b, body)}
+  end
+
+  defp replace_body(list, body) when is_list(list) do
+    Enum.map(list, &replace_body(&1, body))
+  end
+
+  defp replace_body(literal, _body) do
+    literal
   end
 end
