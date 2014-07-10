@@ -231,8 +231,11 @@ defmodule Benchfella do
       name = String.to_atom(name)
       :ets.insert(tab, {{__MODULE__, name}})
 
-      def unquote(name)(n) do
-        Enum.each(1..n, fn _ -> unquote(body) end)
+      def unquote(name)(n), do: unquote(name)(n, nil)
+
+      def unquote(name)(0, result), do: result
+      def unquote(name)(n, _) do
+        unquote(name)(n-1, unquote(body))
       end
     end
   end
