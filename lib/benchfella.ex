@@ -16,8 +16,18 @@ defmodule Benchfella do
 
   def run(_) do
     :ets.new(@results_tab, [:named_table, :set])
-    :ets.foldl(&run_bench/2, 0, @bench_tab)
+    bench_count = :ets.info(@bench_tab, :size)
+    {total_time, _, _} = :ets.foldl(&run_bench/2, {0, 1, bench_count}, @bench_tab)
     {results, max_len} = :ets.foldl(&collect_results/2, {[], 0}, @results_tab)
+
+    IO.puts "---"
+    print_results(results, max_len)
+    IO.puts "---"
+    sec = Float.round(total_time / 1_000_000, 2)
+    IO.puts "Total running time: #{sec} s"
+  end
+
+  defp print_results(results, max_len) do
     results
     |> Enum.sort(fn {_, _, n1}, {_, _, n2} -> n1 < n2 end)
     |> Enum.each(fn {name, n, musec} ->
@@ -25,17 +35,30 @@ defmodule Benchfella do
     end)
   end
 
-  defp run_bench({{mod, func}}, count) do
-    {n, elapsed} = measure_func(mod, func)
-    :ets.insert(@results_tab, {{mod, func}, n, elapsed})
-    count+1
+  defp run_bench({{mod, func}}, {total_time, i, count}) do
+    IO.puts "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
+    {elapsed, _} = :timer.tc(fn ->
+      {n, elapsed} = measure_func(mod, func)
+      :ets.insert(@results_tab, {{mod, func}, n, elapsed})
+    end)
+    {total_time+elapsed, i+1, count}
+  end
+
+  defp format_now() do
+    {_, {h,m,s}} = :erlang.localtime()
+    :io_lib.format('~2.10.0B:~2.10.0B:~2.10.0B', [h, m, s])
+    |> List.to_string()
   end
 
   defp collect_results({{mod, f}, n, elapsed}, {list, max_len}) do
     musec = elapsed / n
-    name = "#{inspect mod}.#{f}:"
+    name = bench_name(mod, f) <> ":"
     result = {name, n, musec}
     {[result|list], max(String.length(name), max_len)}
+  end
+
+  defp bench_name(mod, f) do
+    "#{inspect mod}.#{f}"
   end
 
   @bench_time 1_000_000
