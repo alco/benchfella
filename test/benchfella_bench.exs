@@ -1,4 +1,4 @@
-Benchfella.start
+Benchfella.start mem_stats: true
 
 defmodule BenchfellaBench do
   use Benchfella
@@ -6,7 +6,7 @@ defmodule BenchfellaBench do
   @str "Some long string here. It should be much longer than this."
 
   Enum.each([1, 10, 100, 1000], fn n ->
-    @bench_str String.duplicate("Some long string here. It should be much longer than this.", n)
+    @bench_str String.duplicate(@str, n)
 
     bench "range test #{n}" do
       String.slice(@bench_str, 10..-10)
