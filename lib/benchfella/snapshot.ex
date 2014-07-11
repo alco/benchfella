@@ -2,6 +2,8 @@ defmodule Benchfella.Snapshot do
   alias __MODULE__
   defstruct options: %{}, tests: %{}
 
+  @precision 2
+
   def parse(str) do
     [header | rest] = String.split(str, "\n")
 
@@ -51,15 +53,11 @@ defmodule Benchfella.Snapshot do
 
   def format_percent(num) do
     str = if num > 0 do <<?+>> else <<>> end
-    str <> Float.to_string(num, decimals: 2) <> "%"
+    str <> Float.to_string(num, decimals: @precision) <> "%"
   end
 
-  defp diff(r1, r2, :ratio), do: Float.round(r2 / r1, 2)
-  defp diff(r1, r2, :percent), do: ratio_to_percent(r2 / r1)
-
-  def ratio_to_percent(ratio), do: Float.round(log2(ratio) * 100, 2)
-
-  defp log2(x), do: :math.log(x) / :math.log(2)
+  defp diff(r1, r2, :ratio), do: Float.round(r2 / r1, @precision)
+  defp diff(r1, r2, :percent), do: Float.round((r2 - r1) / r1 * 100, @precision)
 
   defp symm_diff(set1, set2) do
     Set.union(Set.difference(set1, set2), Set.difference(set2, set1))
