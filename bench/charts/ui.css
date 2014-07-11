@@ -1,0 +1,11 @@
+.data-axis path,
+.data-axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.data-axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}

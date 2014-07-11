@@ -1,0 +1,32 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <title>Index</title>
+
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+  <script src="http://code.jquery.com/jquery-2.1.1.min.js" charset="utf-8"></script>
+  <script src="http://underscorejs.org/underscore-min.js" charset="utf-8"></script>
+
+  <link rel="stylesheet" href="ui.css" type="text/css" media="screen" charset="utf-8">
+</head>
+<body>
+
+  <p>Scale:
+    <select id="scale-selector">
+      <option>linear</option>
+      <option>log10</option>
+    </select>
+  </p>
+
+  <script id="json-data" type="application/json" charset="utf-8">
+    {
+      "options": {"duration":1.0,"mem stats":false,"sys mem stats":false},
+        "tests": {"BenchfellaBench":{"binary test 1":{"elapsed":1164951,"n":100000000},"binary test 10":{"elapsed":1160016,"n":100000000},"binary test 100":{"elapsed":1149756,"n":100000000},"binary test 1000":{"elapsed":1179581,"n":100000000},"slice test 1":{"elapsed":1694446,"n":50000},"slice test 10":{"elapsed":1524992,"n":5000},"slice test 100":{"elapsed":1786319,"n":500},"slice test 1000":{"elapsed":1665021,"n":50}},"ListBench":{"reverse list 1":{"elapsed":3035891,"n":100000000},"reverse list 10":{"elapsed":8123431,"n":100000000},"reverse list 100":{"elapsed":3811328,"n":10000000},"reverse list 1000":{"elapsed":2149784,"n":500000},"reverse list 10000":{"elapsed":2086763,"n":50000}},"StringBench":{"reverse string 1":{"elapsed":6861238,"n":10000000},"reverse string 10":{"elapsed":3066431,"n":500000},"reverse string 100":{"elapsed":3114648,"n":50000},"reverse string 1000":{"elapsed":3411026,"n":5000},"reverse string 10000":{"elapsed":3451803,"n":500}}}
+    }
+  </script>
+
+  <script src="ui.js" type="text/javascript" charset="utf-8"></script>
+</body>
+</html>

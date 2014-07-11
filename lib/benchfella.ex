@@ -10,7 +10,7 @@ defmodule Benchfella do
   end
 
   def start(opts \\ []) do
-    cli_opts = Process.get(:"benchfella cli options")
+    cli_opts = Process.get(:"benchfella cli options", [])
     opts = Keyword.merge(opts, cli_opts)
 
     :ets.new(@bench_tab, [:public, :named_table, :set])
@@ -93,14 +93,15 @@ defmodule Benchfella do
     |> Enum.sort(fn {_, n1, elapsed1, _}, {_, n2, elapsed2, _} ->
       elapsed1/n1 < elapsed2/n2
     end)
-    |> Enum.each(fn {name, n, elapsed, mem_stats} ->
+    |> Enum.each(fn {{mod, f}, n, elapsed, mem_stats} ->
       case format do
         :default ->
           musec = elapsed / n
-          :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len, name, n, musec])
+          name = bench_name(mod, f)<>":"
+          :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len-1, name, n, musec])
 
         :machine ->
-          :io.format('~s~B:~B~n', [name, n, elapsed])
+          :io.format('~s:~s;~B;~B~n', [inspect(mod), "#{f}", n, elapsed])
       end
       if collect_mem_stats do
         print_mem_stats(n, mem_stats, sys_mem_stats)
@@ -164,9 +165,8 @@ defmodule Benchfella do
   end
 
   defp collect_results({{mod, f}, n, elapsed, mem_stats}, {list, max_len}) do
-    name = bench_name(mod, f) <> ":"
-    result = {name, n, elapsed, mem_stats}
-    {[result|list], max(String.length(name), max_len)}
+    result = {{mod, f}, n, elapsed, mem_stats}
+    {[result|list], max(String.length(bench_name(mod, f)), max_len)}
   end
 
   defp bench_name(mod, f) do

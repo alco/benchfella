@@ -8,7 +8,7 @@ defmodule BenchfellaBench do
   Enum.each([1, 10, 100, 1000], fn n ->
     @bench_str String.duplicate(@str, n)
 
-    bench "range test #{n}" do
+    bench "slice test #{n}" do
       String.slice(@bench_str, 10..-10)
     end
 

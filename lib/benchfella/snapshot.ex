@@ -16,7 +16,7 @@ defmodule Benchfella.Snapshot do
     tests =
       rest
       |> Enum.reject(&(&1 == ""))
-      |> Enum.map(&String.split(&1, ":"))
+      |> Enum.map(&String.split(&1, ";"))
       |> Enum.map(fn [name, count, elapsed] ->
         {name, {String.to_integer(count), String.to_integer(elapsed)}}
       end)
@@ -76,7 +76,12 @@ defmodule Benchfella.Snapshot do
 
   defp json_encode_tests(tests) do
     Enum.map(tests, fn {name, {n, elapsed}} ->
-      { name, %{"n" => n, "elapsed" => elapsed} }
+      [mod, test] = String.split(name, ":")
+      { mod, test, %{"n" => n, "elapsed" => elapsed} }
+    end)
+    |> Enum.group_by(fn {mod, _, _} -> mod end)
+    |> Enum.map(fn {mod, list} ->
+      {mod, Enum.map(list, fn {_, test, val} -> {test,val} end) |> Enum.into(%{})}
     end)
     |> Enum.into(%{})
     |> Json.encode()
