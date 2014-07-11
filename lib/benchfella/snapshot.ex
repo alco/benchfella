@@ -54,7 +54,7 @@ defmodule Benchfella.Snapshot do
     str <> Float.to_string(num, decimals: 2) <> "%"
   end
 
-  defp diff(r1, r2, :ratio), do: r2 / r1
+  defp diff(r1, r2, :ratio), do: Float.round(r2 / r1, 2)
   defp diff(r1, r2, :percent), do: ratio_to_percent(r2 / r1)
 
   def ratio_to_percent(ratio), do: Float.round(log2(ratio) * 100, 2)

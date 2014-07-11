@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Bench do
   @moduledoc """
   Usage:
 
-      mix bench [options]
+    mix bench [options]
 
   Options:
 
