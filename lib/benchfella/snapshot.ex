@@ -62,4 +62,23 @@ defmodule Benchfella.Snapshot do
   defp symm_diff(set1, set2) do
     Set.union(Set.difference(set1, set2), Set.difference(set2, set1))
   end
+
+  alias Benchfella.Json
+
+  def to_json(%Snapshot{tests: tests, options: options}) do
+    """
+    {
+      "options": #{Json.encode(options)},
+      "tests": #{json_encode_tests(tests)}
+    }
+    """
+  end
+
+  defp json_encode_tests(tests) do
+    Enum.map(tests, fn {name, {n, elapsed}} ->
+      { name, %{"n" => n, "elapsed" => elapsed} }
+    end)
+    |> Enum.into(%{})
+    |> Json.encode()
+  end
 end
