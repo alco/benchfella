@@ -4,14 +4,14 @@ defmodule Mix.Tasks.Bench.Cmp do
   @shortdoc "Compare benchmark snapshots"
 
   @moduledoc """
-  Usage:
+  ## Usage
 
-    mix bench.cmp [options] <snapshot1> <snapshot2>
+      mix bench.cmp [options] <snapshot1> <snapshot2>
 
-  Options:
+  ## Options
 
-    -f=<fmt>, --format=<fmt>
-        Which format to use for the difference. One of: ratio, percent.
+      -f=<fmt>, --format=<fmt>
+          Which format to use for the difference. One of: ratio, percent.
   """
 
   def run(args) do

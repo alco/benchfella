@@ -4,29 +4,29 @@ defmodule Mix.Tasks.Bench do
   @shortdoc "Benchmark your code"
 
   @moduledoc """
-  Usage:
+  ## Usage
 
-    mix bench [options]
+      mix bench [options]
 
-  Options:
+  ## Options
 
-    -d <duration>, --duration=<duration>
-        Minimum duration of each bench in seconds.
+      -d <duration>, --duration=<duration>
+          Minimum duration of each bench in seconds.
 
-    -m, --mem-stats
-        Gather memory usage statistics.
+      -m, --mem-stats
+          Gather memory usage statistics.
 
-    --sys-mem-stats
-        Gather system memory stats. Implies --mem-stats.
+      --sys-mem-stats
+          Gather system memory stats. Implies --mem-stats.
 
-    -v, --verbose
-        Print progress report while the benches are running.
+      -v, --verbose
+          Print progress report while the benches are running.
 
-        Reports are printed to stderr so as not to interfere with output
-        redirection.
+          Reports are printed to stderr so as not to interfere with output
+          redirection.
 
-    -f=<fmt>, --format=<fmt>
-        Output format. One of: default, machine.
+      -f=<fmt>, --format=<fmt>
+          Output format. One of: default, machine.
   """
 
   def run(args) do
