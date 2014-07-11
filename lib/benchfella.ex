@@ -205,12 +205,12 @@ defmodule Benchfella do
     # Run more iterations than we think we'll need for a second (1.5x).
     # Don't grow too fast in case we had timing errors previously.
     # Be sure to run at least one more than last time.
-    max(min(n+div(n,2), 10*last), last+1) |> round_up()
+    max(min(1.5*n, 10*last), last+1) |> round_up()
   end
 
-  # round n up to an easy to read number; one of 10eX, 20eX, 50eX
+  # round n up to an easy to read number; one of 1eX, 2eX, 5eX
   defp round_up(n) do
-    base = round_down(n, 10)
+    base = round_down(trunc(n), 10)
     cond do
       n <= base   -> base
       n <= 2*base -> 2*base
