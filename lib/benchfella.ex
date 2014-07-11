@@ -10,7 +10,10 @@ defmodule Benchfella do
   end
 
   def start(opts \\ []) do
-    :ets.new(@bench_tab, [:named_table, :set])
+    cli_opts = Process.get(:"benchfella cli options")
+    opts = Keyword.merge(opts, cli_opts)
+
+    :ets.new(@bench_tab, [:public, :named_table, :set])
 
     {collect_mem_stats, sys_mem_stats} =
       case Keyword.fetch(opts, :mem_stats) do
@@ -56,7 +59,10 @@ defmodule Benchfella do
         IO.puts "  mem stats:     #{mem_stats}"
         IO.puts "  sys mem stats: #{sys_mem_stats}"
         IO.puts ""
+
+      true -> nil
     end
+
     :ets.new(@results_tab, [:named_table, :set])
     bench_count = :ets.info(@bench_tab, :size)
     bench_config = {bench_time, mem_stats}
