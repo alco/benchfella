@@ -47,19 +47,26 @@ defmodule Benchfella do
   defp sec2musec(sec), do: trunc(sec * 1_000_000)
   defp musec2sec(musec), do: Float.round(musec/1_000_000, 2)
 
+  defp log(msg), do: IO.puts(:stderr, msg)
+
   def run(bench_time, verbose, format, mem_stats, sys_mem_stats) do
     if format == :machine do
+      if mem_stats or sys_mem_stats do
+        log ">> 'mem stats' flag is currently ignored in machine format"
+      end
+      mem_stats = false
+      sys_mem_stats = false
       IO.puts "duration:#{musec2sec(bench_time)};"
                <> "mem stats:#{mem_stats};"
                <> "sys mem stats:#{sys_mem_stats}"
     end
 
     if verbose do
-      IO.puts :stderr, "Settings:"
-      IO.puts :stderr, "  duration:      #{musec2sec(bench_time)} s"
-      IO.puts :stderr, "  mem stats:     #{mem_stats}"
-      IO.puts :stderr, "  sys mem stats: #{sys_mem_stats}"
-      IO.puts :stderr, ""
+      log "Settings:"
+      log "  duration:      #{musec2sec(bench_time)} s"
+      log "  mem stats:     #{mem_stats}"
+      log "  sys mem stats: #{sys_mem_stats}"
+      log ""
     end
 
     :ets.new(@results_tab, [:named_table, :set])
@@ -71,8 +78,8 @@ defmodule Benchfella do
 
     if verbose do
       sec = Float.round(total_time / 1_000_000, 2)
-      IO.puts :stderr, "Finished in #{sec} seconds"
-      IO.puts :stderr, ""
+      log "Finished in #{sec} seconds"
+      log ""
     end
 
     #:io.format('~*.s ~10s   time~n', [-max_len, "benchmark", "iterations"])
@@ -140,7 +147,7 @@ defmodule Benchfella do
 
   defp run_bench({{mod, func}}, {total_time, i, count}, follow, config) do
     if follow do
-      IO.puts :stderr, "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
+      log "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
     end
     {elapsed, _} = :timer.tc(fn ->
       {n, elapsed, mem_stats} = measure_func(mod, func, config)
