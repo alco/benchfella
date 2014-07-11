@@ -5,7 +5,8 @@ Benchmark tool for Elixir.
 
 ## Usage
 
-Add a directory called `bench` and put files called `*_bench.exs` into it.
+Add a directory called `bench` and put files called `*_bench.exs` into it. Then
+run `mix bench`.
 
 Example:
 
@@ -21,9 +22,10 @@ defmodule BasicBench do
 end
 ```
 
+
 ### `mix bench`
 
-Run `mix bench`. Sample output (for a different set of benchmarks):
+Sample output:
 
 ```
 $ mix bench --mem-stats
