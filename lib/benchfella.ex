@@ -11,6 +11,7 @@ defmodule Benchfella do
 
   def start(opts \\ []) do
     :ets.new(@bench_tab, [:named_table, :set])
+
     {collect_mem_stats, sys_mem_stats} =
       case Keyword.fetch(opts, :mem_stats) do
         {:ok, :include_sys} -> {true, true}
@@ -19,24 +20,42 @@ defmodule Benchfella do
         :error              -> {false, false}
       end
 
+    format = case Keyword.fetch(opts, :format) do
+      {:ok, f} when f in [:default, :machine] -> f
+      :error -> :default
+    end
+
+    verbose = case Keyword.fetch(opts, :verbose) do
+      {:ok, flag} when flag in [false, true] -> flag
+      :error -> format == :default
+    end
+
+    output = case Keyword.fetch(opts, :output) do
+      {:ok, path} when is_binary(path) -> path
+      :error -> :default
+    end
+
     System.at_exit(fn _ ->
       run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
-        Keyword.get(opts, :verbose, true),
-        collect_mem_stats,
-        sys_mem_stats)
+                    verbose, format, output, collect_mem_stats, sys_mem_stats)
     end)
   end
 
   defp sec2musec(sec), do: trunc(sec * 1_000_000)
   defp musec2sec(musec), do: Float.round(musec/1_000_000, 2)
 
-  def run(bench_time, verbose, mem_stats, sys_mem_stats) do
-    if verbose do
-      IO.puts "Settings:"
-      IO.puts "  duration:      #{musec2sec(bench_time)} s"
-      IO.puts "  mem stats:     #{mem_stats}"
-      IO.puts "  sys mem stats: #{sys_mem_stats}"
-      IO.puts ""
+  def run(bench_time, verbose, format, output, mem_stats, sys_mem_stats) do
+    cond do
+      format == :machine ->
+        IO.puts "duration:#{musec2sec(bench_time)};"
+                 <> "mem stats:#{mem_stats};"
+                 <> "sys mem stats:#{sys_mem_stats}"
+      verbose ->
+        IO.puts "Settings:"
+        IO.puts "  duration:      #{musec2sec(bench_time)} s"
+        IO.puts "  mem stats:     #{mem_stats}"
+        IO.puts "  sys mem stats: #{sys_mem_stats}"
+        IO.puts ""
     end
     :ets.new(@results_tab, [:named_table, :set])
     bench_count = :ets.info(@bench_tab, :size)
@@ -47,20 +66,29 @@ defmodule Benchfella do
 
     if verbose do
       sec = Float.round(total_time / 1_000_000, 2)
-      IO.puts "Finished in #{sec} seconds"
-      IO.puts ""
+      IO.puts :stderr, "Finished in #{sec} seconds"
+      IO.puts :stderr, ""
     end
 
     #:io.format('~*.s ~10s   time~n', [-max_len, "benchmark", "iterations"])
     #IO.puts ""
-    print_results(results, max_len, mem_stats, sys_mem_stats)
+    print_results(results, max_len, format, mem_stats, sys_mem_stats)
   end
 
-  defp print_results(results, max_len, collect_mem_stats, sys_mem_stats) do
+  defp print_results(results, max_len, format, collect_mem_stats, sys_mem_stats) do
     results
-    |> Enum.sort(fn {_, _, n1, _}, {_, _, n2, _} -> n1 < n2 end)
-    |> Enum.each(fn {name, n, musec, mem_stats} ->
-      :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len, name, n, musec])
+    |> Enum.sort(fn {_, n1, elapsed1, _}, {_, n2, elapsed2, _} ->
+      elapsed1/n1 < elapsed2/n2
+    end)
+    |> Enum.each(fn {name, n, elapsed, mem_stats} ->
+      case format do
+        :default ->
+          musec = elapsed / n
+          :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len, name, n, musec])
+
+        :machine ->
+          :io.format('~s~B:~B~n', [name, n, elapsed])
+      end
       if collect_mem_stats do
         print_mem_stats(n, mem_stats, sys_mem_stats)
       end
@@ -107,7 +135,7 @@ defmodule Benchfella do
 
   defp run_bench({{mod, func}}, {total_time, i, count}, follow, config) do
     if follow do
-      IO.puts "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
+      IO.puts :stderr, "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
     end
     {elapsed, _} = :timer.tc(fn ->
       {n, elapsed, mem_stats} = measure_func(mod, func, config)
@@ -123,9 +151,8 @@ defmodule Benchfella do
   end
 
   defp collect_results({{mod, f}, n, elapsed, mem_stats}, {list, max_len}) do
-    musec = elapsed / n
     name = bench_name(mod, f) <> ":"
-    result = {name, n, musec, mem_stats}
+    result = {name, n, elapsed, mem_stats}
     {[result|list], max(String.length(name), max_len)}
   end
 
