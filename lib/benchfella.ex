@@ -33,34 +33,33 @@ defmodule Benchfella do
       :error -> format == :default
     end
 
-    output = case Keyword.fetch(opts, :output) do
-      {:ok, path} when is_binary(path) -> path
-      :error -> :default
-    end
+    # output = case Keyword.fetch(opts, :output) do
+    #   {:ok, path} when is_binary(path) -> path
+    #   :error -> :default
+    # end
 
     System.at_exit(fn _ ->
       run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
-                    verbose, format, output, collect_mem_stats, sys_mem_stats)
+                    verbose, format, collect_mem_stats, sys_mem_stats)
     end)
   end
 
   defp sec2musec(sec), do: trunc(sec * 1_000_000)
   defp musec2sec(musec), do: Float.round(musec/1_000_000, 2)
 
-  def run(bench_time, verbose, format, output, mem_stats, sys_mem_stats) do
-    cond do
-      format == :machine ->
-        IO.puts "duration:#{musec2sec(bench_time)};"
-                 <> "mem stats:#{mem_stats};"
-                 <> "sys mem stats:#{sys_mem_stats}"
-      verbose ->
-        IO.puts "Settings:"
-        IO.puts "  duration:      #{musec2sec(bench_time)} s"
-        IO.puts "  mem stats:     #{mem_stats}"
-        IO.puts "  sys mem stats: #{sys_mem_stats}"
-        IO.puts ""
+  def run(bench_time, verbose, format, mem_stats, sys_mem_stats) do
+    if format == :machine do
+      IO.puts "duration:#{musec2sec(bench_time)};"
+               <> "mem stats:#{mem_stats};"
+               <> "sys mem stats:#{sys_mem_stats}"
+    end
 
-      true -> nil
+    if verbose do
+      IO.puts :stderr, "Settings:"
+      IO.puts :stderr, "  duration:      #{musec2sec(bench_time)} s"
+      IO.puts :stderr, "  mem stats:     #{mem_stats}"
+      IO.puts :stderr, "  sys mem stats: #{sys_mem_stats}"
+      IO.puts :stderr, ""
     end
 
     :ets.new(@results_tab, [:named_table, :set])
