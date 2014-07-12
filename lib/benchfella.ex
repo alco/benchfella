@@ -1,5 +1,5 @@
 defmodule Benchfella do
-  @bench_tab __MODULE__
+  @bench_tab :"#{__MODULE__}:tests"
   @results_tab :"#{__MODULE__}:results"
   @bench_sec 1
 
@@ -13,7 +13,11 @@ defmodule Benchfella do
     cli_opts = Process.get(:"benchfella cli options", [])
     opts = Keyword.merge(opts, cli_opts)
 
-    :ets.new(@bench_tab, [:public, :named_table, :set])
+    # spawn a zombie process to keep the table alive
+    pid = spawn(fn ->
+      receive do end
+    end)
+    :ets.new(@bench_tab, [:public, :named_table, :set, {:heir, pid, nil}])
 
     {collect_mem_stats, sys_mem_stats} =
       case Keyword.fetch(opts, :mem_stats) do
@@ -266,10 +270,18 @@ defmodule Benchfella do
     :timer.tc(mod, f, [n])
   end
 
+  def add_bench(mod, func_name) do
+    try do
+      :ets.insert(@bench_tab, {{mod, func_name}})
+    catch
+      :error, :badarg -> raise "Benchfella is not started"
+    end
+  end
+
   defmacro bench(name, [do: body]) do
-    quote bind_quoted: [name: name, tab: @bench_tab, body: Macro.escape(body)] do
+    quote bind_quoted: [fella: __MODULE__, name: name, body: Macro.escape(body)] do
       name = String.to_atom(name)
-      :ets.insert(tab, {{__MODULE__, name}})
+      fella.add_bench(__MODULE__, name)
 
       def unquote(name)(n), do: unquote(name)(n, nil)
 
