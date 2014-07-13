@@ -14,8 +14,15 @@ var REDS    = ["#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d",
 var NCOLORS = 7;
 var COLORS = [BLUES, GREENS, ORANGES, VIOLETS, REDS, BLACKS];
 
+var PALETTE = ["#edf8fb", "#ccece6", "#99d8c9", "#66c2a4", "#2ca25f", "#006d2c"].reverse();
+//var PALETTE = ["#f1eef6", "#d4b9da", "#c994c7", "#df65b0", "#dd1c77", "#980043"].reverse();
+//var PALETTE = ["#fee5d9", "#fcbba1", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"].reverse();
+//var PALETTE = ["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1", "#54278f"].reverse();
+//var PALETTE = ["#ffffcc", "#c7e9b4", "#7fcdbb", "#41b6c4", "#2c7fb8", "#253494"].reverse();
+
 function color_at(i, j) {
-    return COLORS[i % COLORS.length][NCOLORS - 1 - j % NCOLORS];
+    return PALETTE[(i+j)%PALETTE.length];
+    //return COLORS[i % COLORS.length][NCOLORS - 1 - j % NCOLORS];
 }
 
 function format_time(time) {
@@ -29,9 +36,11 @@ function add_chart(name, tests, scale) {
 }
 
 function make_chart(svg, name, tests, scale) {
+    var svgWidth = 1000;
+    var svgHeight = _.keys(tests).length * BAR_HEIGHT_TOTAL + 50;
     svg.attr({
-        width: 1000,
-        height: _.keys(tests).length * BAR_HEIGHT_TOTAL + 50,
+        width: svgWidth,
+        height: svgHeight,
     });
 
     var nums = _.map(tests, function(val) { return val.elapsed / val.n; });
@@ -94,17 +103,23 @@ var lookupScale = {
     log10: "log",
 };
 
-$("#scale-selector").click(function() {
-    $("svg").remove();
+function redrawCharts(scale) {
+    $("h1").remove();
     $("h2").remove();
-    var scale = lookupScale[$(this).val()];
-    _.each(data.tests, function(tests, name) {
-        add_chart(name, tests, scale);
+    $("svg").remove();
+    _.each(data, function(dict, name) {
+        $("<h1/>").text(name).appendTo($("body"));
+        _.each(dict.tests, function(tests, name) {
+            add_chart(name, tests, scale);
+        });
     });
+}
+
+$("#scale-selector").click(function() {
+    var scale = lookupScale[$(this).val()];
+    redrawCharts(scale);
 });
 
 $(function() {
-    _.each(data.tests, function(tests, name) {
-        add_chart(name, tests, "linear");
-    });
+    redrawCharts("log");
 });

@@ -9,3 +9,8 @@
     font-family: sans-serif;
     font-size: 11px;
 }
+
+rect {
+    stroke: black;
+    shape-rendering: crispEdges;
+}

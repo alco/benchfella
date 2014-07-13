@@ -8,6 +8,10 @@ defmodule Mix.Tasks.Bench.Chart do
 
       mix bench.chart [options] <snapshot>...
 
+  It takes one or more snapshot and produces and HTML page with the charts. For
+  a single snapshot it builds some overview charts. For multiple snapshots, it
+  groups related tests togather and also shows deltas.
+
   ## Options
 
   """
@@ -15,9 +19,17 @@ defmodule Mix.Tasks.Bench.Chart do
   alias Benchfella.Snapshot
 
   def run(args) do
-    [path] = args
-    snapshot = Snapshot.parse(File.read!(path))
-    Snapshot.to_json(snapshot) |> IO.puts
+    paths = args
+    snapshots_json =
+      paths
+      |> Enum.map(fn path ->
+        {path, path |> File.read! |> Snapshot.parse}
+      end)
+      |> Enum.map(fn {name, snapshot} ->
+        ~s("#{name}": #{Snapshot.to_json(snapshot)})
+      end)
+      |> Enum.join(",")
+    IO.puts "{#{snapshots_json}}"
   end
 end
 
