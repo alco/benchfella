@@ -99,7 +99,7 @@ function make_chart(svg, name, tests, scale) {
 }
 
 function add_comparison_chart(name, categories, scale) {
-    d3.select("body").append("h2").text(name);
+    //d3.select("body").append("h2").text(name);
     var svg = d3.select("body").append("svg");
     make_comparison_chart(svg, categories, scale);
 }
@@ -124,7 +124,7 @@ function make_comparison_chart(svg, categories, scale) {
     var catCount = _.size(categories);
     var xPadding = 0;
     var left = xPadding;
-    var right = svgWidth-xPadding;
+    var right = svgWidth-2*xPadding;
     var w0 = (right - left) / catCount;
     var pad = 0.3;
     var truePad = 1 - (1 - pad) / snapshotCount;
@@ -137,18 +137,19 @@ function make_comparison_chart(svg, categories, scale) {
     //var names = _.map(tests, function(val, name) { return name; });
 
     var dataScale;
-    var yExtent = [10, svgHeight-20];
+    var yExtent = [0, svgHeight-50];
     if (scale == "linear") {
         dataScale = d3.scale.linear()
-            .domain([0, d3.max(values)])
+            .domain([d3.max(values), 0])
             .range(yExtent);
     } else if (scale == "log10") {
         dataScale = d3.scale.log()
-            .domain([0.01, d3.max(values)])
+            .domain([d3.max(values), 0.01])
             .range(yExtent);
     }
 
-    var xOffset = 0;
+    var xOffset = 60;
+    var rectOffset = xOffset + 5;
     for (var i = 0; i < snapshotCount; i++) {
         // Go through the ith snapshot of each category
         var sample = _.map(categories, function(snapshots, key) {
@@ -156,52 +157,66 @@ function make_comparison_chart(svg, categories, scale) {
             return {cat: key, val: val.elapsed / val.n};
         });
 
+        console.log(sample);
+
         svg.append("g").selectAll("rect")
             .data(sample)
             .enter()
                 .append("rect")
                 .attr({
-                    transform: "scale(1, -1) translate(0, "+-svgHeight+")",
-                    x: function(d, i) { return xOffset+xScale(d.cat); },
-                    y: yExtent[0],
+                    x: function(d) { return rectOffset+xScale(d.cat); },
+                    y: function(d) { return dataScale(d.val); },
                     width: xScale.rangeBand(),
-                    height: function(d) { return dataScale(d.val); },
+                    height: function(d) { return yExtent[1] - dataScale(d.val); },
                     fill: color_at(i),
                 });
 
-        xOffset += xScale.rangeBand();
+        rectOffset += xScale.rangeBand();
     }
 
-    //svg.selectAll("text.label")
-        //.data(names)
-        //.enter()
-            //.append("text")
-            //.attr({
-                //class: "label",
-                //y: function(d, i) { return i * BAR_HEIGHT_TOTAL + BAR_HEIGHT_TOTAL/2; },
-            //})
-            //.text(function(d) { return d; });
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom");
 
-    //svg.selectAll("text.timing")
-        //.data(nums)
-        //.enter()
-            //.append("text")
-            //.attr({
-                //class: "timing",
-                //x: CHART_OFFSET_X + CHART_WIDTH + DATA_LABEL_OFFSET_X,
-                //y: function(d, i) { return i * 30 + 15; },
-            //})
-            //.text(function(d) { return format_time(d); });
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate("+xOffset+"," + (svgHeight-45) + ")")
+        .call(xAxis)
+      .selectAll(".tick text")
+        .call(wrap, xScale.rangeBand());
 
-    //var xAxis = d3.svg.axis()
-        //.scale(dataScale)
-        //.ticks(5);
+    var yAxis = d3.svg.axis()
+        .scale(dataScale)
+        .orient("left");
 
-    //var axisY = nums.length * 30;
-    //svg.append("g")
-        //.attr({transform: "translate("+CHART_OFFSET_X+", "+axisY+")"})
-        //.attr("class", "data-axis")
-        //.call(xAxis);
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate("+xOffset+",0)")
+        .call(yAxis);
+}
+
+function wrap(text, width) {
+  text.each(function() {
+    var text = d3.select(this),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1.1, // ems
+        y = text.attr("y"),
+        dy = parseFloat(text.attr("dy")),
+        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+    while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+      }
+    }
+  });
 }
 
 var data = JSON.parse($("#json-data").html());
@@ -223,7 +238,8 @@ _.each(data, function(dict, name) {
     _.each(dict.tests, function(tests, modName) {
         // loop over test cases
         _.each(tests, function(dict, testName) {
-            var fullName = modName + "." + testName;
+            //var fullName = modName + "." + testName;
+            var fullName = testName;
             if (!allTests[fullName]) {
                 allTests[fullName] = make_tuple(count);
             }

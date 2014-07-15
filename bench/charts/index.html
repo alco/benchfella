@@ -21,19 +21,15 @@
   </p>
 
   <script id="json-data" type="application/json" charset="utf-8">
-{"slice_snapshot.txt": {
-  "options": {"duration":0.5,"mem stats":false,"sys mem stats":false},
-    "tests": {"StringSlice":{"slice negative both 1":{"elapsed":1199248,"n":500000},"slice negative both 10":{"elapsed":902993,"n":20000},"slice negative both 1000":{"elapsed":901375,"n":200},"slice negative left 1":{"elapsed":555364,"n":100000},"slice negative left 10":{"elapsed":856986,"n":20000},"slice negative left 1000":{"elapsed":921973,"n":200},"slice negative right 1":{"elapsed":1291656,"n":500000},"slice negative right 10":{"elapsed":513690,"n":10000},"slice negative right 1000":{"elapsed":622217,"n":100},"slice positive 1":{"elapsed":1658584,"n":500000},"slice positive 10":{"elapsed":1683429,"n":500000},"slice positive 1000":{"elapsed":1683045,"n":500000}}}
+{"/Users/alco/Documents/git/elixir/slice_bench_master.txt": {
+  "options": {"duration":1.0,"mem stats":false,"sys mem stats":false},
+    "tests": {"StringSlice":{"slice -1":{"elapsed":3173858,"n":50},"slice almost all":{"elapsed":2044511,"n":50},"slice left half":{"elapsed":2011329,"n":100},"slice right half":{"elapsed":1641394,"n":50}}}
     }
-    ,"slice_snapshot_faster.txt": {
-      "options": {"duration":0.5,"mem stats":false,"sys mem stats":false},
-        "tests": {"StringSlice":{"slice negative both 1":{"elapsed":3614545,"n":10000000},"slice negative both 10":{"elapsed":3580604,"n":10000000},"slice negative both 1000":{"elapsed":3588000,"n":10000000},"slice negative left 1":{"elapsed":638549,"n":100000},"slice negative left 10":{"elapsed":808447,"n":20000},"slice negative left 1000":{"elapsed":803705,"n":200},"slice negative right 1":{"elapsed":2067261,"n":500000},"slice negative right 10":{"elapsed":1637198,"n":50000},"slice negative right 1000":{"elapsed":1687918,"n":500},"slice positive 1":{"elapsed":1698720,"n":500000},"slice positive 10":{"elapsed":1732536,"n":500000},"slice positive 1000":{"elapsed":1693381,"n":500000}}}
+    ,"/Users/alco/Documents/git/elixir/slice_bench_pr.txt": {
+      "options": {"duration":1.0,"mem stats":false,"sys mem stats":false},
+        "tests": {"StringSlice":{"slice -1":{"elapsed":6241923,"n":10000000},"slice almost all":{"elapsed":1579061,"n":50},"slice left half":{"elapsed":1524124,"n":100},"slice right half":{"elapsed":2899370,"n":100}}}
         }
-        ,"slice_snapshot_misc.txt": {
-          "options": {"duration":0.5,"mem stats":false,"sys mem stats":false},
-            "tests": {"StringSlice":{"slice negative both 1":{"elapsed":3475856,"n":10000000},"slice negative both 10":{"elapsed":3589893,"n":10000000},"slice negative both 1000":{"elapsed":3508495,"n":10000000},"slice negative left 1":{"elapsed":649647,"n":100000},"slice negative left 10":{"elapsed":867039,"n":20000},"slice negative left 1000":{"elapsed":757155,"n":200},"slice negative right 1":{"elapsed":2064162,"n":500000},"slice negative right 10":{"elapsed":1632363,"n":50000},"slice negative right 1000":{"elapsed":1593333,"n":500},"slice positive 1":{"elapsed":1757882,"n":500000},"slice positive 10":{"elapsed":1760076,"n":500000},"slice positive 1000":{"elapsed":1735677,"n":500000}}}
-            }
-            }
+        }
   </script>
 
   <script src="ui.js" type="text/javascript" charset="utf-8"></script>
