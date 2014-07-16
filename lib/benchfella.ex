@@ -38,9 +38,10 @@ defmodule Benchfella do
     #   :error -> :default
     # end
 
-    System.at_exit(fn _ ->
-      run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
+    System.at_exit(fn
+      0 -> run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
                     verbose, format, collect_mem_stats, sys_mem_stats)
+      status -> status
     end)
   end
 
@@ -233,7 +234,7 @@ defmodule Benchfella do
 
   defp measure_n(mod, f, n, collect_mem_stats) do
     parent = self()
-    pid = spawn(fn ->
+    pid = spawn_link(fn ->
       pid = self()
       if collect_mem_stats do
         {:memory, mem_before} = :erlang.process_info(pid, :memory)
