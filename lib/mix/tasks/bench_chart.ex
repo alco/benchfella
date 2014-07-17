@@ -29,7 +29,18 @@ defmodule Mix.Tasks.Bench.Chart do
         ~s("#{name}": #{Snapshot.to_json(snapshot)})
       end)
       |> Enum.join(",")
-    IO.puts "{#{snapshots_json}}"
+
+    chart_dir_path = "bench/charts"
+    chart_path = Path.join([chart_dir_path, "index.html"])
+    File.mkdir_p(chart_dir_path)
+    File.write!(chart_path, index(snapshots_json))
+    IO.puts "Wrote #{chart_path}"
   end
+
+  @app Mix.Project.config[:app]
+
+  require EEx
+  path = Path.join([List.to_string(:code.priv_dir(@app)), "templates", "index.html.eex"])
+  EEx.function_from_file :def, :index, path, [:json]
 end
 
