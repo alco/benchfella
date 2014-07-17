@@ -64,6 +64,7 @@ defmodule Benchfella do
       IO.puts "duration:#{musec2sec(bench_time)};"
                <> "mem stats:#{mem_stats};"
                <> "sys mem stats:#{sys_mem_stats}"
+      IO.puts "module;test;tags;iterations;elapsed"
     end
 
     if verbose do
@@ -105,7 +106,7 @@ defmodule Benchfella do
           :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len-1, name, n, musec])
 
         :machine ->
-          :io.format('~s:~s;~B;~B~n', [inspect(mod), "#{f}", n, elapsed])
+          :io.format('~s;~s;;~B;~B~n', [inspect(mod), "#{f}", n, elapsed])
       end
       if collect_mem_stats do
         print_mem_stats(n, mem_stats, sys_mem_stats)

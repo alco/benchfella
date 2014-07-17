@@ -1,11 +1,11 @@
 defmodule Benchfella.Snapshot do
   alias __MODULE__
-  defstruct options: %{}, tests: %{}
+  defstruct options: %{}, tests: []
 
   @precision 2
 
   def parse(str) do
-    [header | rest] = String.split(str, "\n")
+    [header, _titles | rest] = String.split(str, "\n")
 
     options =
       header
@@ -17,11 +17,17 @@ defmodule Benchfella.Snapshot do
       rest
       |> Enum.reject(&(&1 == ""))
       |> Enum.map(&String.split(&1, ";"))
-      |> Enum.map(fn [name, count, elapsed] ->
-        {name, {String.to_integer(count), String.to_integer(elapsed)}}
+      |> Enum.map(fn [mod, test, tags, iter, elapsed] ->
+        tags =
+          String.split(tags, ",")
+          |> Enum.map(&String.strip/1)
+          |> Enum.reject(&(&1 == ""))
+        iter = String.to_integer(iter)
+        elapsed = String.to_integer(elapsed)
+        {mod, test, tags, iter, elapsed}
       end)
 
-    %Snapshot{options: Enum.into(options, %{}), tests: Enum.into(tests, %{})}
+    %Snapshot{options: Enum.into(options, %{}), tests: tests}
   end
 
   defp parse_opt("duration", val), do: String.to_float(val)
@@ -75,15 +81,15 @@ defmodule Benchfella.Snapshot do
   end
 
   defp json_encode_tests(tests) do
-    Enum.map(tests, fn {name, {n, elapsed}} ->
-      [mod, test] = String.split(name, ":")
-      { mod, test, %{"n" => n, "elapsed" => elapsed} }
+    Enum.map(tests, fn {mod, test, tags, iter, elapsed} ->
+      %{
+        module: mod,
+        test: test,
+        tags: tags,
+        iter: iter,
+        elapsed: elapsed,
+      }
     end)
-    |> Enum.group_by(fn {mod, _, _} -> mod end)
-    |> Enum.map(fn {mod, list} ->
-      {mod, Enum.map(list, fn {_, test, val} -> {test,val} end) |> Enum.into(%{})}
-    end)
-    |> Enum.into(%{})
     |> Json.encode()
   end
 end
