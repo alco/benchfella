@@ -38,19 +38,26 @@ defmodule Benchfella.Snapshot do
   defp parse_bool("true"), do: true
 
   def compare(%Snapshot{tests: tests1}, %Snapshot{tests: tests2}, format \\ :ratio) do
-    name_set1 = Map.keys(tests1) |> Enum.into(HashSet.new)
-    name_set2 = Map.keys(tests2) |> Enum.into(HashSet.new)
+    {test_map1, name_set1} = extrace_test_names(tests1)
+    {test_map2, name_set2} = extrace_test_names(tests2)
     common_tests = Set.intersection(name_set1, name_set2)
     diffs = Enum.reduce(common_tests, %{}, fn name, diffs ->
-      {count, elapsed} = tests1[name]
+      {count, elapsed} = test_map1[name]
       result1 = elapsed / count
 
-      {count, elapsed} = tests2[name]
+      {count, elapsed} = test_map2[name]
       result2 = elapsed / count
 
       Map.put(diffs, name, diff(result1, result2, format))
     end)
     {diffs, symm_diff(name_set1, name_set2) |> Enum.into([])}
+  end
+
+  defp extrace_test_names(tests) do
+    Enum.reduce(tests, {%{}, HashSet.new}, fn {mod, test, _tags, iter, elapsed}, {map, set} ->
+      name = bench_name(mod, test)
+      {Map.put(map, name, {iter, elapsed}), Set.put(set, name)}
+    end)
   end
 
   def format_percent(0.0) do
