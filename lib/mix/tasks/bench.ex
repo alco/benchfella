@@ -6,12 +6,29 @@ defmodule Mix.Tasks.Bench do
   @moduledoc """
   ## Usage
 
-      mix bench [options]
+      mix bench [options] [<path>...]
+
+  ## Arguments
+
+  When one or more arguments are supplied, each of them will be treated as a
+  wildcard pattern and only those bench tests that match the pattern will be
+  selected.
+
+  By default, all files matching `bench/**/*_bench.exs` are run.
 
   ## Options
 
+      -p, --pretty
+          Discard machine output and print only the prettified version.
+
+      -q, --quiet
+          Don't print progress report while the tests are running.
+
+          Reports are normally printed to stderr so as not to interfere with
+          output redirection.
+
       -d <duration>, --duration=<duration>
-          Minimum duration of each bench in seconds.
+          Minimum duration of each test in seconds.
 
       -m, --mem-stats
           Gather memory usage statistics.
@@ -19,40 +36,38 @@ defmodule Mix.Tasks.Bench do
       --sys-mem-stats
           Gather system memory stats. Implies --mem-stats.
 
-      -v, --verbose
-          Print progress report while the benches are running.
-
-          Reports are printed to stderr so as not to interfere with output
-          redirection.
-
-      -f=<fmt>, --format=<fmt>
-          Output format. One of: default, machine.
   """
 
   def run(args) do
-    switches = [format: :string, verbose: :boolean, duration: :float,
+    switches = [pretty: :boolean, quiet: :boolean, duration: :float,
                 mem_stats: :boolean, sys_mem_stats: :boolean]
-    aliases = [f: :format, v: :verbose, d: :duration, m: :mem_stats]
-    options =
+    aliases = [p: :pretty, q: :quiet, d: :duration, m: :mem_stats]
+    {paths, options} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
-        {opts, [], []} -> opts
-        {_, [arg|_], []} ->
-          Mix.raise "Extraneous argument: #{arg}"
+        {opts, paths, []} -> {paths, opts}
         {_, _, [{opt, val}|_]} ->
           valstr = if val do "=#{val}" end
           Mix.raise "Invalid option: #{opt}#{valstr}"
       end
       |> normalize_options()
     Process.put(:"benchfella cli options", options)
-    load_bench_files()
+    load_bench_files(paths)
   end
 
-  defp load_bench_files() do
-    files = Path.wildcard("bench/**/*_bench.exs")
-    unless files == [] do
-      load_bench_helper()
-      Kernel.ParallelRequire.files(files)
-    end
+  defp load_bench_files([]) do
+    Path.wildcard("bench/**/*_bench.exs")
+    |> do_load_bench_files
+  end
+
+  defp load_bench_files(paths) do
+    Enum.flat_map(paths, &Path.wildcard/1)
+    |> do_load_bench_files
+  end
+
+  defp do_load_bench_files([]), do: nil
+  defp do_load_bench_files(files) do
+    load_bench_helper()
+    Kernel.ParallelRequire.files(files)
   end
 
   @helper_path "bench/bench_helper.exs"
@@ -65,18 +80,20 @@ defmodule Mix.Tasks.Bench do
     end
   end
 
-  defp normalize_options(options) do
-    Enum.reduce(options, %{}, fn
-      {:format, fmt}, map -> Map.put(map, :format, parse_format(fmt))
-      {:mem_stats, flag}, map -> Map.update(map, :mem_stats, flag, & &1)
-      {:sys_mem_stats, true}, map -> Map.put(map, :mem_stats, :include_sys)
-      {:sys_mem_stats, _}, map -> map
-      {k, v}, map -> Map.put(map, k, v)
-    end)
-    |> Enum.to_list()
+  defp normalize_options({paths, options}) do
+    options =
+      Enum.reduce(options, %{}, fn
+        {:pretty, flag}, map -> Map.put(map, :format, pretty_to_format(flag))
+        {:quiet, flag}, map -> Map.put(map, :verbose, not flag)
+        {:mem_stats, flag}, map -> Map.update(map, :mem_stats, flag, & &1)
+        {:sys_mem_stats, true}, map -> Map.put(map, :mem_stats, :include_sys)
+        {:sys_mem_stats, _}, map -> map
+        {k, v}, map -> Map.put(map, k, v)
+      end)
+      |> Enum.to_list()
+    {paths, options}
   end
 
-  defp parse_format("default"), do: :default
-  defp parse_format("machine"), do: :machine
-  defp parse_format(other), do: Mix.raise "Undefined format: #{other}"
+  defp pretty_to_format(true), do: :default
+  defp pretty_to_format(false), do: :machine
 end

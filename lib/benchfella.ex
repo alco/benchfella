@@ -27,15 +27,8 @@ defmodule Benchfella do
         :error              -> {false, false}
       end
 
-    format = case Keyword.fetch(opts, :format) do
-      {:ok, f} when f in [:default, :machine] -> f
-      :error -> :default
-    end
-
-    verbose = case Keyword.fetch(opts, :verbose) do
-      {:ok, flag} when flag in [false, true] -> flag
-      :error -> format == :default
-    end
+    format = Keyword.get(opts, :format, :machine)
+    verbose = Keyword.get(opts, :verbose, true)
 
     # output = case Keyword.fetch(opts, :output) do
     #   {:ok, path} when is_binary(path) -> path
@@ -61,10 +54,6 @@ defmodule Benchfella do
       end
       mem_stats = false
       sys_mem_stats = false
-      IO.puts "duration:#{musec2sec(bench_time)};"
-               <> "mem stats:#{mem_stats};"
-               <> "sys mem stats:#{sys_mem_stats}"
-      IO.puts "module;test;tags;iterations;elapsed"
     end
 
     if verbose do
@@ -90,10 +79,17 @@ defmodule Benchfella do
 
     #:io.format('~*.s ~10s   time~n', [-max_len, "benchmark", "iterations"])
     #IO.puts ""
-    print_results(results, max_len, format, mem_stats, sys_mem_stats)
+    print_results(results, bench_time, max_len, format, mem_stats, sys_mem_stats)
   end
 
-  defp print_results(results, max_len, format, collect_mem_stats, sys_mem_stats) do
+  defp print_results(results, bench_time, max_len, format, collect_mem_stats, sys_mem_stats) do
+    if format == :machine do
+      IO.puts "duration:#{musec2sec(bench_time)};"
+               <> "mem stats:#{collect_mem_stats};"
+               <> "sys mem stats:#{sys_mem_stats}"
+      IO.puts "module;test;tags;iterations;elapsed"
+    end
+
     results
     |> Enum.sort(fn {_, n1, elapsed1, _}, {_, n2, elapsed2, _} ->
       elapsed1/n1 < elapsed2/n2
