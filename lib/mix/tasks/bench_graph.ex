@@ -1,15 +1,15 @@
-defmodule Mix.Tasks.Bench.Chart do
+defmodule Mix.Tasks.Bench.Graph do
   use Mix.Task
 
-  @shortdoc "Produce an HTML page with charts built from given snapshots"
+  @shortdoc "Produce an HTML page with graphs built from given snapshots"
 
   @moduledoc """
   ## Usage
 
-      mix bench.chart [options] <snapshot>...
+      mix bench.graph [options] <snapshot>...
 
-  It takes one or more snapshot and produces and HTML page with the charts. For
-  a single snapshot it builds some overview charts. For multiple snapshots, it
+  It takes one or more snapshot and produces and HTML page with the graphs. For
+  a single snapshot it builds some overview graphs. For multiple snapshots, it
   groups related tests togather and also shows deltas.
 
   ## Options
@@ -30,11 +30,11 @@ defmodule Mix.Tasks.Bench.Chart do
       end)
       |> Enum.join(",")
 
-    chart_dir_path = "bench/charts"
-    chart_path = Path.join([chart_dir_path, "index.html"])
-    File.mkdir_p(chart_dir_path)
-    File.write!(chart_path, index(snapshots_json))
-    IO.puts "Wrote #{chart_path}"
+    graph_dir_path = "bench/graphs"
+    graph_path = Path.join([graph_dir_path, "index.html"])
+    File.mkdir_p(graph_dir_path)
+    File.write!(graph_path, index(snapshots_json))
+    IO.puts "Wrote #{graph_path}"
   end
 
   @app Mix.Project.config[:app]
