@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Bench do
 
       mix bench [options] [<path>...]
 
-  ## Arguments
+  ## Description
 
   When one or more arguments are supplied, each of them will be treated as a
   wildcard pattern and only those bench tests that match the pattern will be
