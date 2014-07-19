@@ -3,6 +3,10 @@ Benchfella
 
 Benchmark tool for Elixir.
 
+This utility is in a usable state, but not as user-friendly at the moment. See
+the list of issues to find out what is being worked on.
+
+
 ## Usage
 
 Add a directory called `bench` and put files called `*_bench.exs` into it. Then
