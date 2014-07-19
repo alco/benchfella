@@ -3,8 +3,7 @@ Benchfella
 
 Benchmark tool for Elixir.
 
-This utility is in a usable state, but not as user-friendly at the moment. See
-the list of issues to find out what is being worked on.
+The ability to draw pretty graphs is still a few commits away...
 
 
 ## Usage
@@ -32,80 +31,45 @@ end
 Sample output:
 
 ```
-$ mix bench --mem-stats
+$ mix bench -p
 Settings:
   duration:      1.0 s
-  mem stats:     true
+  mem stats:     false
   sys mem stats: false
 
-[21:36:11] 1/8: BenchfellaBench.binary test 10
-[21:36:12] 2/8: BenchfellaBench.binary test 1
-[21:36:14] 3/8: BenchfellaBench.range test 10
-[21:36:17] 4/8: BenchfellaBench.binary test 100
-[21:36:18] 5/8: BenchfellaBench.binary test 1000
-[21:36:20] 6/8: BenchfellaBench.range test 1000
-[21:36:22] 7/8: BenchfellaBench.range test 1
-[21:36:25] 8/8: BenchfellaBench.range test 100
-Finished in 15.69 seconds
+[02:53:15] 1/4: StringBench.reverse string
+[02:53:18] 2/4: BinBench.binary_part
+[02:53:19] 3/4: BinBench.matching
+[02:53:25] 4/4: ListBench.reverse list
+Finished in 12.2 seconds
 
-BenchfellaBench.binary test 10:     10000000   0.13 µs/op
-  mem initial:  2680
-  mem after:    142656
-  mem diff:     0.01 bytes/op
-
-BenchfellaBench.binary test 100:    10000000   0.13 µs/op
-  mem initial:  2680
-  mem after:    142656
-  mem diff:     0.01 bytes/op
-
-BenchfellaBench.binary test 1:      10000000   0.13 µs/op
-  mem initial:  2680
-  mem after:    142656
-  mem diff:     0.01 bytes/op
-
-BenchfellaBench.binary test 1000:   10000000   0.13 µs/op
-  mem initial:  2680
-  mem after:    142656
-  mem diff:     0.01 bytes/op
-
-BenchfellaBench.range test 1:         100000   25.16 µs/op
-  mem initial:  2680
-  mem after:    109168
-  mem diff:     1.06 bytes/op
-
-BenchfellaBench.range test 10:         10000   289.00 µs/op
-  mem initial:  2680
-  mem after:    13592
-  mem diff:     1.09 bytes/op
-
-BenchfellaBench.range test 100:          500   3278.40 µs/op
-  mem initial:  2680
-  mem after:    7560
-  mem diff:     9.76 bytes/op
-
-BenchfellaBench.range test 1000:          50   32240.40 µs/op
-  mem initial:  2680
-  mem after:    7560
-  mem diff:     97.6 bytes/op
-
+BinBench.binary_part:        100000000   0.01 µs/op
+BinBench.matching:           100000000   0.05 µs/op
+ListBench.reverse list:          50000   41.33 µs/op
+StringBench.reverse string:       1000   2474.14 µs/op
 ```
 
 ### `mix bench.cmp`
 
-To compare results between multiple runs, use machine output format:
+To compare results between multiple runs, omit the `-p` flag from `mix bench`
+and feed the output to `mix bench.cmp`:
 
 ```
-$ mix bench --verbose -f machine >snapshot_old.txt
-[05:14:51] 1/2: BasicBench.hello list
-[05:14:54] 2/2: BenchBench.hello string
-Finished in 7.18 seconds
+$ mix bench bench/benchfella/* >snapshot1.txt
+Settings:
+  duration:      1.0 s
+  mem stats:     false
+  sys mem stats: false
 
-$ mix bench --verbose -f machine >snapshot_new.txt
-[05:15:03] 1/2: BasicBench.hello list
-[05:15:05] 2/2: BenchBench.hello string
-Finished in 4.94 seconds
+[02:55:43] 1/3: BinBench.binary_part
+[02:55:45] 2/3: BinBench.matching
+[02:55:50] 3/3: ListBench.reverse list
+Finished in 9.57 seconds
 
-$ mix bench.cmp snapshot_old.txt snapshot_new.txt -f percent
-BasicBench.hello list:   -2.04%
-BenchBench.hello string: -0.08%
+$ mix bench -q bench/benchfella/* >snapshot2.txt
+
+$ mix bench.cmp -f percent snapshot1.txt snapshot2.txt
+BinBench.matching:      -6.44%
+ListBench.reverse list: -1.28%
+BinBench.binary_part:   -0.83%
 ```
