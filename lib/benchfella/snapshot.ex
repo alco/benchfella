@@ -69,6 +69,28 @@ defmodule Benchfella.Snapshot do
     Set.union(Set.difference(set1, set2), Set.difference(set2, set1))
   end
 
+
+  def pretty_print(%Snapshot{tests: tests}) do
+    {tests, max_len} = Enum.map_reduce(tests, 0, fn {mod, test, _, iter, elapsed}, max_len ->
+      name = bench_name(mod, test)
+      len = String.length(name)
+      { {name, iter, elapsed}, max(len, max_len)}
+    end)
+
+    tests
+    |> Enum.sort(fn {_, iter1, elapsed1}, {_, iter2, elapsed2} ->
+      elapsed1/iter1 < elapsed2/iter2
+    end)
+    |> Enum.each(fn {name, n, elapsed} ->
+      musec = elapsed / n
+      name = [name, ?:]
+      :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len-1, name, n, musec])
+    end)
+  end
+
+  defp bench_name(mod, test), do: "#{mod}.#{test}"
+
+
   alias Benchfella.Json
 
   def to_json(%Snapshot{tests: tests, options: options}) do

@@ -3,6 +3,8 @@ defmodule Benchfella do
   @results_tab :"#{__MODULE__}:results"
   @bench_sec 1
 
+  alias Benchfella.Snapshot
+
   defmacro __using__(_) do
     quote do
       import unquote(__MODULE__), only: :macros
@@ -69,7 +71,7 @@ defmodule Benchfella do
     bench_config = {bench_time, mem_stats}
     {total_time, _, _} =
       :ets.foldl(&run_bench(&1, &2, verbose, bench_config), {0, 1, bench_count}, @bench_tab)
-    {results, max_len} = :ets.foldl(&collect_results/2, {[], 0}, @results_tab)
+    results = :ets.foldl(&collect_results/2, [], @results_tab)
 
     if verbose do
       sec = Float.round(total_time / 1_000_000, 2)
@@ -77,37 +79,34 @@ defmodule Benchfella do
       log ""
     end
 
-    #:io.format('~*.s ~10s   time~n', [-max_len, "benchmark", "iterations"])
-    #IO.puts ""
-    print_results(results, bench_time, max_len, format, mem_stats, sys_mem_stats)
+    print_results(results, bench_time, format, mem_stats, sys_mem_stats)
   end
 
-  defp print_results(results, bench_time, max_len, format, collect_mem_stats, sys_mem_stats) do
-    if format == :machine do
-      IO.puts "duration:#{musec2sec(bench_time)};"
-               <> "mem stats:#{collect_mem_stats};"
-               <> "sys mem stats:#{sys_mem_stats}"
-      IO.puts "module;test;tags;iterations;elapsed"
-    end
-
-    results
-    |> Enum.sort(fn {_, n1, elapsed1, _}, {_, n2, elapsed2, _} ->
-      elapsed1/n1 < elapsed2/n2
+  defp print_results(results, bench_time, format, collect_mem_stats, sys_mem_stats) do
+    iodata = [
+      "duration:", "#{musec2sec(bench_time)};",
+      "mem stats:", "#{collect_mem_stats};",
+      "sys mem stats:", "#{sys_mem_stats}",
+      "\nmodule;test;tags;iterations;elapsed\n",
+    ] ++ Enum.map(results, fn {{mod, f}, n, elapsed, _mem_stats} ->
+      :io_lib.format('~s;~s;;~B;~B~n', [inspect(mod), "#{f}", n, elapsed])
+      #if collect_mem_stats do
+      #  print_mem_stats(n, mem_stats, sys_mem_stats)
+      #end
     end)
-    |> Enum.each(fn {{mod, f}, n, elapsed, mem_stats} ->
-      case format do
-        :default ->
-          musec = elapsed / n
-          name = bench_name(mod, f)<>":"
-          :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len-1, name, n, musec])
+    print_formatted_data(iodata, format)
+  end
 
-        :machine ->
-          :io.format('~s;~s;;~B;~B~n', [inspect(mod), "#{f}", n, elapsed])
-      end
-      if collect_mem_stats do
-        print_mem_stats(n, mem_stats, sys_mem_stats)
-      end
-    end)
+  defp print_formatted_data(iodata, :machine) do
+    IO.write(iodata)
+  end
+
+  defp print_formatted_data(iodata, :pretty) do
+    iodata
+    |> Enum.map(&IO.iodata_to_binary/1)
+    |> Enum.join("")
+    |> Snapshot.parse
+    |> Snapshot.pretty_print
   end
 
   defp print_mem_stats(n, {mem_before, mem_after, mem_after_gc,
@@ -165,9 +164,9 @@ defmodule Benchfella do
     |> List.to_string()
   end
 
-  defp collect_results({{mod, f}, n, elapsed, mem_stats}, {list, max_len}) do
+  defp collect_results({{mod, f}, n, elapsed, mem_stats}, list) do
     result = {{mod, f}, n, elapsed, mem_stats}
-    {[result|list], max(String.length(bench_name(mod, f)), max_len)}
+    [result|list]
   end
 
   defp bench_name(mod, f) do

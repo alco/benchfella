@@ -94,6 +94,6 @@ defmodule Mix.Tasks.Bench do
     {paths, options}
   end
 
-  defp pretty_to_format(true), do: :default
+  defp pretty_to_format(true), do: :pretty
   defp pretty_to_format(false), do: :machine
 end
