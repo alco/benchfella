@@ -29,6 +29,8 @@ defmodule Mix.Tasks.Bench.Cmp do
           One of: ratio, percent.
   """
 
+  alias Benchfella.Snapshot
+
   def run(args) do
     switches = [output: :string, format: :string]
     aliases = [o: :output, f: :format]
@@ -73,8 +75,6 @@ defmodule Mix.Tasks.Bench.Cmp do
   defp parse_pretty_format("ratio"), do: :ratio
   defp parse_pretty_format("percent"), do: :percent
   defp parse_pretty_format(other), do: Mix.raise "Undefined pretty format: #{other}"
-
-  alias Benchfella.Snapshot
 
   defp pretty_print("-") do
     read_all_input() |> Snapshot.parse |> Snapshot.pretty_print

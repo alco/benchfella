@@ -1,8 +1,10 @@
 defmodule Benchfella.Snapshot do
-  alias __MODULE__
   defstruct options: %{}, tests: []
 
   @precision 2
+
+  alias __MODULE__
+  alias Benchfella.Json
 
   def parse(str) do
     [header, _titles | rest] = String.split(str, "\n")
@@ -97,8 +99,6 @@ defmodule Benchfella.Snapshot do
 
   defp bench_name(mod, test), do: "#{mod}.#{test}"
 
-
-  alias Benchfella.Json
 
   def to_json(%Snapshot{tests: tests, options: options}) do
     """
