@@ -139,15 +139,4 @@ defmodule Mix.Tasks.Bench.Cmp do
       true -> nil
     end
   end
-
-  defp to_json(paths) do
-    paths
-    |> Enum.map(fn path ->
-      {path, path |> File.read! |> Snapshot.parse}
-    end)
-    |> Enum.map(fn {name, snapshot} ->
-      ~s("#{name}": #{Snapshot.to_json(snapshot)})
-    end)
-    |> Enum.join(",")
-  end
 end

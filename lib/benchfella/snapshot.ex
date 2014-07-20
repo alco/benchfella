@@ -106,7 +106,18 @@ defmodule Benchfella.Snapshot do
       "options": #{Json.encode(options)},
       "tests": #{json_encode_tests(tests)}
     }
-    """
+    """ |> String.rstrip
+  end
+
+  def paths_to_json(paths) do
+    fields =
+      paths
+      |> Enum.map(fn path -> {path, path |> File.read! |> parse} end)
+      |> Enum.map(fn {name, snapshot} ->
+        ~s("#{name}": #{to_json(snapshot)})
+      end)
+      |> Enum.join(",")
+    "{" <> fields <> "}"
   end
 
   defp json_encode_tests(tests) do

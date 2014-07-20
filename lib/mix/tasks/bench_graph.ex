@@ -20,15 +20,7 @@ defmodule Mix.Tasks.Bench.Graph do
 
   def run(args) do
     paths = args
-    snapshots_json =
-      paths
-      |> Enum.map(fn path ->
-        {path, path |> File.read! |> Snapshot.parse}
-      end)
-      |> Enum.map(fn {name, snapshot} ->
-        ~s("#{name}": #{Snapshot.to_json(snapshot)})
-      end)
-      |> Enum.join(",")
+    snapshots_json = Snapshot.paths_to_json(paths)
 
     graph_dir_path = "bench/graphs"
     graph_path = Path.join([graph_dir_path, "index.html"])
