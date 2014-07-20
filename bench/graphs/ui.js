@@ -183,7 +183,7 @@ function make_comparison_chart(svg, categories, scale) {
         .attr("transform", "translate("+xOffset+"," + (svgHeight-45) + ")")
         .call(xAxis)
       .selectAll(".tick text")
-        .call(wrap, xScale.rangeBand());
+        .call(wordWrap, xScale.rangeBand());
 
     var yAxis = d3.svg.axis()
         .scale(dataScale)
@@ -195,7 +195,7 @@ function make_comparison_chart(svg, categories, scale) {
         .call(yAxis);
 }
 
-function wrap(text, width) {
+function wordWrap(text, width) {
   text.each(function() {
     var text = d3.select(this),
         words = text.text().split(/\s+/).reverse(),
@@ -234,17 +234,20 @@ var allTests = {};
 var count = 0;
 // loop over snapshots
 _.each(data, function(dict, name) {
-    // loop over modules
-    _.each(dict.tests, function(tests, modName) {
-        // loop over test cases
-        _.each(tests, function(dict, testName) {
-            //var fullName = modName + "." + testName;
-            var fullName = testName;
-            if (!allTests[fullName]) {
-                allTests[fullName] = make_tuple(count);
-            }
-            allTests[fullName].push(dict);
-        });
+    // loop tests
+    _.each(dict.tests, function(test) {
+        var modName = test["module"];
+        var testName = test["test"];
+        //var fullName = modName + "." + testName;
+        var fullName = testName;
+        if (!allTests[fullName]) {
+            allTests[fullName] = make_tuple(count);
+        }
+        var testCase = {
+            elapsed: test["elapsed"],
+            n: test["iter"],
+        };
+        allTests[fullName].push(testCase);
     });
     count++;
 
