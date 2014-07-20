@@ -51,7 +51,7 @@ StringBench.reverse string:       1000   2474.14 µs/op
 ### `mix bench.cmp`
 
 To compare results between multiple runs, omit the `-p` flag from `mix bench`
-and feed the output to `mix bench.cmp`:
+and feed the output to `mix bench.cmp`.
 
 ```
 $ mix bench bench/benchfella/* >snapshot1.txt
@@ -76,4 +76,21 @@ BinBench.binary_part:   -0.83%
 
 ### `mix bench.graph`
 
-The ability to draw pretty graphs is still a few commits away...
+Benchfella can produce an HTML page with graphs showing different insights into
+the raw data obtained from running `mix bench`.
+
+```
+$ mix bench -q >snapshot1.txt
+
+$ mix bench -q >snapshot2.txt
+
+$ mix bench.graph snapshot1.txt snapshot2.txt
+Wrote bench/graphs/index.html
+```
+
+![Graph example](bench_graph.png "Graph example")
+
+
+## License
+
+This software is licensed under [the MIT license](LICENSE).
