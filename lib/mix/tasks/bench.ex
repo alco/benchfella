@@ -8,8 +8,6 @@ defmodule Mix.Tasks.Bench do
 
       mix bench [options] [<path>...]
 
-  ## Description
-
   When one or more arguments are supplied, each of them will be treated as a
   wildcard pattern and only those bench tests that match the pattern will be
   selected.
@@ -24,8 +22,8 @@ defmodule Mix.Tasks.Bench do
       -q, --quiet
           Don't print progress report while the tests are running.
 
-          Reports are normally printed to stderr so as not to interfere with
-          output redirection.
+          Reports are printed to stderr so as not to interfere with output
+          redirection.
 
       -d <duration>, --duration=<duration>
           Minimum duration of each test in seconds.

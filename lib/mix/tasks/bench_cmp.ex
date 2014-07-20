@@ -8,8 +8,6 @@ defmodule Mix.Tasks.Bench.Cmp do
 
       mix bench.cmp [options] <snapshot>...
 
-  ## Description
-
   A snapshot is the output of a single run of `mix bench` without the
   `--pretty` flag.
 
@@ -23,7 +21,7 @@ defmodule Mix.Tasks.Bench.Cmp do
       -o=<fmt>, --output=<fmt>
           Output format. One of: pretty, json.
 
-          The json format can be fed into `mix bench.graph`.
+          The json format can be fed into mix bench.graph.
 
       -f=<fmt>, --format=<fmt>
           Which format to use for the deltas when pretty-printing.
@@ -55,7 +53,7 @@ defmodule Mix.Tasks.Bench.Cmp do
             compare(first, last, Map.get(options, :format, :ratio))
         end
       :json ->
-        to_json(List.wrap(snapshots))
+        Snapshot.paths_to_json(List.wrap(snapshots)) |> IO.puts
     end
   end
 

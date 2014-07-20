@@ -8,9 +8,9 @@ defmodule Mix.Tasks.Bench.Graph do
 
       mix bench.graph [options] <snapshot>...
 
-  It takes one or more snapshot and produces and HTML page with the graphs. For
-  a single snapshot it builds some overview graphs. For multiple snapshots, it
-  groups related tests togather and also shows deltas.
+  Takes one or more snapshots and produces and HTML page with graphs. For a
+  single snapshot it builds some overview graphs. For multiple snapshots, it
+  groups related tests together and also shows deltas.
 
   ## Options
 

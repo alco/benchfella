@@ -1,9 +1,7 @@
 Benchfella
 ==========
 
-Benchmark tool for Elixir.
-
-The ability to draw pretty graphs is still a few commits away...
+The benchmarking tool for Elixir.
 
 
 ## Usage
@@ -49,6 +47,7 @@ ListBench.reverse list:          50000   41.33 µs/op
 StringBench.reverse string:       1000   2474.14 µs/op
 ```
 
+
 ### `mix bench.cmp`
 
 To compare results between multiple runs, omit the `-p` flag from `mix bench`
@@ -73,3 +72,8 @@ BinBench.matching:      -6.44%
 ListBench.reverse list: -1.28%
 BinBench.binary_part:   -0.83%
 ```
+
+
+### `mix bench.graph`
+
+The ability to draw pretty graphs is still a few commits away...
