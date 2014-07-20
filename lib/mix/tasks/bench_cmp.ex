@@ -18,11 +18,6 @@ defmodule Mix.Tasks.Bench.Cmp do
 
   ## Options
 
-      -o=<fmt>, --output=<fmt>
-          Output format. One of: pretty, json.
-
-          The json format can be fed into mix bench.graph.
-
       -f=<fmt>, --format=<fmt>
           Which format to use for the deltas when pretty-printing.
 
@@ -30,10 +25,11 @@ defmodule Mix.Tasks.Bench.Cmp do
   """
 
   alias Benchfella.Snapshot
+  alias Benchfella.CLI.Util
 
   def run(args) do
-    switches = [output: :string, format: :string]
-    aliases = [o: :output, f: :format]
+    switches = [format: :string]
+    aliases = [f: :format]
     {snapshots, options} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
         {opts, [], []} ->
@@ -46,57 +42,32 @@ defmodule Mix.Tasks.Bench.Cmp do
       end
       |> normalize_options()
 
-    case Map.get(options, :output, :pretty) do
-      :pretty ->
-        case snapshots do
-          [snapshot] -> pretty_print(snapshot)
-          [first|rest] ->
-            last = List.last(rest)
-            compare(first, last, Map.get(options, :format, :ratio))
-        end
-      :json ->
-        Snapshot.paths_to_json(List.wrap(snapshots)) |> IO.puts
+    case snapshots do
+      [snapshot] -> pretty_print(snapshot)
+      [first|rest] ->
+        last = List.last(rest)
+        compare(first, last, Map.get(options, :format, :ratio))
     end
   end
 
   defp normalize_options({snapshots, options}) do
     options =
       Enum.reduce(options, %{}, fn
-        {:output, fmt}, acc -> Map.put(acc, :output, parse_output_format(fmt))
         {:format, fmt}, acc -> Map.put(acc, :format, parse_pretty_format(fmt))
       end)
     {snapshots, options}
   end
-
-  defp parse_output_format("pretty"), do: :pretty
-  defp parse_output_format("json"), do: :json
-  defp parse_output_format(other), do: Mix.raise "Undefined output format: #{other}"
 
   defp parse_pretty_format("ratio"), do: :ratio
   defp parse_pretty_format("percent"), do: :percent
   defp parse_pretty_format(other), do: Mix.raise "Undefined pretty format: #{other}"
 
   defp pretty_print("-") do
-    read_all_input() |> Snapshot.parse |> Snapshot.pretty_print
+    Util.read_all_input() |> Snapshot.parse |> Snapshot.pretty_print
   end
 
   defp pretty_print(path) do
     path |> File.read! |> Snapshot.parse |> Snapshot.pretty_print
-  end
-
-  defp read_all_input() do
-    read_all_input([])
-  end
-
-  defp read_all_input(lines) do
-    case IO.binread(:line) do
-      :eof ->
-        lines |> Enum.reverse |> Enum.join("")
-      {:error, reason} ->
-        Mix.raise "Error reading from input: #{inspect reason}"
-      line ->
-        read_all_input([line|lines])
-    end
   end
 
   defp compare(path1, path2, format) do
@@ -119,7 +90,8 @@ defmodule Mix.Tasks.Bench.Cmp do
     end)
 
     unless leftover == [] do
-      IO.puts "Non-matching benches:"
+      # FIXME: when more than 2 snapshots are given, this wording may be imprecise
+      IO.puts "\nThese tests appeared only in one of the snapshots:"
       Enum.each(leftover, fn x -> IO.write "  "; IO.puts x end)
     end
   end

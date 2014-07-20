@@ -109,15 +109,11 @@ defmodule Benchfella.Snapshot do
     """ |> String.rstrip
   end
 
-  def paths_to_json(paths) do
-    fields =
-      paths
-      |> Enum.map(fn path -> {path, path |> File.read! |> parse} end)
-      |> Enum.map(fn {name, snapshot} ->
-        ~s("#{name}": #{to_json(snapshot)})
-      end)
-      |> Enum.join(",")
-    "{" <> fields <> "}"
+  def snapshots_to_json(snapshots) when is_list(snapshots) do
+    fields = Enum.map(snapshots, fn {name, snapshot} ->
+      ~s("#{name}": #{to_json(snapshot)})
+    end)
+    "{" <> Enum.join(fields, ",") <> "}"
   end
 
   defp json_encode_tests(tests) do
