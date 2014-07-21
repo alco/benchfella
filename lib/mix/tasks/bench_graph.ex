@@ -59,7 +59,8 @@ defmodule Mix.Tasks.Bench.Graph do
     graph_dir_path = "bench/graphs"
     graph_path = Path.join([graph_dir_path, "index.html"])
     File.mkdir_p(graph_dir_path)
-    File.write!(graph_path, index(json))
+    html = index(json, File.read!("priv/ui.css"), File.read!("priv/ui.js"))
+    File.write!(graph_path, html)
     IO.puts :stderr, "Wrote #{graph_path}"
   end
 
@@ -67,5 +68,5 @@ defmodule Mix.Tasks.Bench.Graph do
 
   require EEx
   path = Path.join([List.to_string(:code.priv_dir(@app)), "templates", "index.html.eex"])
-  EEx.function_from_file :def, :index, path, [:json]
+  EEx.function_from_file :def, :index, path, [:json, :style, :javascript]
 end

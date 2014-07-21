@@ -9,7 +9,7 @@
   <script src="http://code.jquery.com/jquery-2.1.1.min.js" charset="utf-8"></script>
   <script src="http://underscorejs.org/underscore-min.js" charset="utf-8"></script>
 
-  <link rel="stylesheet" href="ui.css" type="text/css" media="screen" charset="utf-8">
+  <style><%= style %></style>
 </head>
 <body>
 
@@ -22,6 +22,6 @@
 
   <script id="json-data" type="application/json" charset="utf-8"><%= json %></script>
 
-  <script src="ui.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript"><%= javascript %></script>
 </body>
 </html>
