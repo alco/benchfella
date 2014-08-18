@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Bench.Cmp do
       if format == :percent do
         diff = Snapshot.format_percent(diff)
       end
-      colordiff = IO.ANSI.escape "#{color}#{diff}"
+      colordiff = IO.ANSI.format color ++ ["#{diff}"]
       IO.puts colordiff
     end)
 
@@ -98,17 +98,17 @@ defmodule Mix.Tasks.Bench.Cmp do
 
   defp choose_color(diff, :ratio) do
     cond do
-      diff < 1.0 -> "%{green}"
-      diff > 1.0 -> "%{red}"
-      true -> nil
+      diff < 1.0 -> [:green]
+      diff > 1.0 -> [:red]
+      true -> []
     end
   end
 
   defp choose_color(diff, :percent) do
     cond do
-      diff < 0 -> "%{green}"
-      diff > 0 -> "%{red}"
-      true -> nil
+      diff < 0 -> [:green]
+      diff > 0 -> [:red]
+      true -> []
     end
   end
 end
