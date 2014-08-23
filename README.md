@@ -1,7 +1,7 @@
 Benchfella
 ==========
 
-The benchmarking tool for Elixir.
+Benchmarking tool for Elixir.
 
 
 ## Usage
@@ -29,7 +29,7 @@ end
 Sample output:
 
 ```
-$ mix bench -p
+$ mix bench
 Settings:
   duration:      1.0 s
   mem stats:     false
@@ -50,11 +50,10 @@ StringBench.reverse string:       1000   2474.14 µs/op
 
 ### `mix bench.cmp`
 
-To compare results between multiple runs, omit the `-p` flag from `mix bench`
-and feed the output to `mix bench.cmp`.
+To compare results between multiple runs, use `mix bench.cmp`.
 
 ```
-$ mix bench bench/benchfella/* >snapshot1.txt
+$ mix bench -n bench/benchfella/* >snapshot1.txt
 Settings:
   duration:      1.0 s
   mem stats:     false
@@ -65,7 +64,7 @@ Settings:
 [02:55:50] 3/3: ListBench.reverse list
 Finished in 9.57 seconds
 
-$ mix bench -q bench/benchfella/* >snapshot2.txt
+$ mix bench -q -n bench/benchfella/* >snapshot2.txt
 
 $ mix bench.cmp -f percent snapshot1.txt snapshot2.txt
 BinBench.matching:      -6.44%
@@ -76,15 +75,17 @@ BinBench.binary_part:   -0.83%
 
 ### `mix bench.graph`
 
-Benchfella can produce an HTML page with graphs showing different insights into
+Benchfella can produce an HTML page with graphs providing various insights into
 the raw data obtained from running `mix bench`.
 
 ```
-$ mix bench -q >snapshot1.txt
+# run the benchmarks twice
+$ mix bench
+$ mix bench
 
-$ mix bench -q >snapshot2.txt
-
-$ mix bench.graph snapshot1.txt snapshot2.txt
+# snapshots are automatically saved into bench/snapshots directory, so we can
+# omit arguments from bench.graph
+$ mix bench.graph
 Wrote bench/graphs/index.html
 ```
 
