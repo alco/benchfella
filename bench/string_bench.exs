@@ -13,7 +13,6 @@ defmodule StringBench do
   end
 
   defp make_string() do
-    :timer.sleep 5000
     String.duplicate("a", @size)
   end
 end

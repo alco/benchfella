@@ -176,7 +176,8 @@ defmodule Benchfella do
       log "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
     end
     {elapsed, _} = :timer.tc(fn ->
-      {n, elapsed, mem_stats} = measure_func(mod, func, config)
+      inputs = apply(mod, func, [])
+      {n, elapsed, mem_stats} = measure_func(mod, func, inputs, config)
       :ets.insert(@results_tab, {{mod, func}, n, elapsed, mem_stats})
     end)
     {total_time+elapsed, i+1, count}
@@ -198,24 +199,24 @@ defmodule Benchfella do
   end
 
 
-  defp measure_func(mod, f, {_, collect_mem_stats}=config) do
-    {elapsed, result, n, mem_stats} = measure_n(mod, f, 1, collect_mem_stats)
-    measure_func(mod, f, {n, elapsed, result, mem_stats}, config)
+  defp measure_func(mod, f, inputs, {_, collect_mem_stats}=config) do
+    {elapsed, result, n, mem_stats} = measure_n(mod, f, inputs, 1, collect_mem_stats)
+    measure_func(mod, f, inputs, {n, elapsed, result, mem_stats}, config)
   end
 
-  defp measure_func(mod, f, {n, elapsed, result, _}, {bench_time, collect_mem_stats}=config)
+  defp measure_func(mod, f, inputs, {n, elapsed, result, _}, {bench_time, collect_mem_stats}=config)
     when elapsed < bench_time
   do
     n = predict_n(n, elapsed, bench_time)
-    case measure_n(mod, f, n, collect_mem_stats) do
+    case measure_n(mod, f, inputs, n, collect_mem_stats) do
       {elapsed, ^result, n, mem_stats} ->
-        measure_func(mod, f, {n, elapsed, result, mem_stats}, config)
+        measure_func(mod, f, inputs, {n, elapsed, result, mem_stats}, config)
       _ ->
         raise "Got different result between iterations"
     end
   end
 
-  defp measure_func(_, _, {n, elapsed, _, mem_stats}, _) do
+  defp measure_func(_, _, _, {n, elapsed, _, mem_stats}, _) do
     {n, elapsed, mem_stats}
   end
 
@@ -256,7 +257,7 @@ defmodule Benchfella do
     trunc(:math.pow(p, count))
   end
 
-  defp measure_n(mod, f, n, collect_mem_stats) do
+  defp measure_n(mod, f, inputs, n, collect_mem_stats) do
     parent = self()
     pid = spawn_link(fn ->
       pid = self()
@@ -265,7 +266,7 @@ defmodule Benchfella do
         sys_mem_before = :erlang.memory()
       end
 
-      result = measure_once(mod, f, n)
+      result = measure_once(mod, f, n, inputs)
 
       mem_stats = if collect_mem_stats do
         {:memory, mem_after} = :erlang.process_info(pid, :memory)
@@ -286,8 +287,7 @@ defmodule Benchfella do
     end
   end
 
-  defp measure_once(mod, f, n) do
-    inputs = apply(mod, f, [])
+  defp measure_once(mod, f, n, inputs) do
     :timer.tc(mod, f, [n, nil | inputs])
   end
 
@@ -308,16 +308,16 @@ defmodule Benchfella do
   end
 
   defp gen_bench_funcs(name, inputs, body) do
-    {vars, assigns} = Enum.reduce(inputs, {[], []}, fn {name, {func, meta, _}}, {vars, assigns} ->
+    {vars, values} = Enum.reduce(inputs, {[], []}, fn {name, {func, meta, _}}, {vars, values} ->
       var = Macro.var(name, nil)
       val = {func, meta, []}
-      {[var|vars], [quote(do: unquote(var) = unquote(val))|assigns]}
+      {[var|vars], [val|values]}
     end)
     ignored_vars = Enum.map(vars, fn _ -> quote do _ end end)
 
     quote bind_quoted: [
       fella: __MODULE__, name: name, body: Macro.escape(body),
-      assigns: Macro.escape(assigns),
+      values: Macro.escape(values),
       vars: Macro.escape(vars),
       ignored_vars: Macro.escape(ignored_vars)]
     do
@@ -325,7 +325,7 @@ defmodule Benchfella do
       fella.add_bench(__MODULE__, name)
 
       def unquote(name)() do
-        [unquote_splicing(assigns)]
+        [unquote_splicing(values)]
       end
 
       def unquote(name)(0, result, unquote_splicing(ignored_vars)) do
