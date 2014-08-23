@@ -20,6 +20,12 @@ defmodule Mix.Tasks.Bench.Graph do
 
   ## Options
 
+      -n <number>
+          Specify how many snapshots to compare. This option is only useful
+          when no arguments are given.
+
+          Default: 2.
+
       --no-js
           Produce a single HTML file with graphs rendered as SVG and no
           JavaScript on the page.
@@ -30,11 +36,12 @@ defmodule Mix.Tasks.Bench.Graph do
   alias Benchfella.CLI.Util
 
   def run(args) do
-    switches = [no_js: :boolean]
+    switches = [no_js: :boolean, n: :integer]
     {snapshots, options} =
-      case OptionParser.parse(args, strict: switches) do
+      case OptionParser.parse(args, strict: switches, aliases: [n: :n]) do
         {opts, [], []} ->
-          {Util.locate_snapshots(), opts}
+          count = Keyword.get(opts, :n, 2)
+          {Util.locate_snapshots(count), opts}
         {opts, snapshots, []} ->
           {snapshots, opts}
         {_, _, [{opt, val}|_]} ->
