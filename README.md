@@ -78,7 +78,7 @@ BinBench.binary_part:   -0.83%
 Benchfella can produce an HTML page with graphs providing various insights into
 the raw data obtained from running `mix bench`.
 
-```
+```sh
 # run the benchmarks twice
 $ mix bench
 $ mix bench
