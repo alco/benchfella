@@ -12,6 +12,12 @@ defmodule Mix.Tasks.Bench.Graph do
   than one snapshot is given, it allows for grouping multiple runs of
   corresponding tests for comparison.
 
+  If no arguments are given, bench.cmp will try to read one or two latest
+  snapshots from the bench/snapshots directory.
+
+  Giving `-` instead of a file name will make bench.cmp read from standard
+  input.
+
   ## Options
 
       --no-js
@@ -28,7 +34,7 @@ defmodule Mix.Tasks.Bench.Graph do
     {snapshots, options} =
       case OptionParser.parse(args, strict: switches) do
         {opts, [], []} ->
-          {["-"], opts}
+          {Util.locate_snapshots(), opts}
         {opts, snapshots, []} ->
           {snapshots, opts}
         {_, _, [{opt, val}|_]} ->

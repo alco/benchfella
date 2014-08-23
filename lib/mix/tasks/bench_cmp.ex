@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Bench.Cmp do
     {snapshots, options} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
         {opts, [], []} ->
-          {locate_snapshots(), opts}
+          {Util.locate_snapshots(), opts}
         {opts, snapshots, []} ->
           {snapshots, opts}
         {_, _, [{opt, val}|_]} ->
@@ -47,25 +47,11 @@ defmodule Mix.Tasks.Bench.Cmp do
       |> normalize_options()
 
     case snapshots do
-      [] -> Mix.raise "No snapshots found. Pass - to read from stdin"
       [snapshot] -> pretty_print(snapshot)
       [first|rest] ->
         last = List.last(rest)
         compare(first, last, Map.get(options, :format, :ratio))
     end
-  end
-
-  defp locate_snapshots() do
-    dir = "bench/snapshots"
-    case File.ls(dir) do
-      {:error, _} -> []
-      {:ok, files} ->
-        case files |> Enum.sort |> Enum.reverse do
-          [a,b|_] ->  [b,a]
-          other -> other
-        end
-    end
-    |> Enum.map(&Path.join(dir, &1))
   end
 
   defp normalize_options({snapshots, options}) do

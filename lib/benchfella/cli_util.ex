@@ -13,4 +13,22 @@ defmodule Benchfella.CLI.Util do
         read_all_input([line|lines])
     end
   end
+
+  def locate_snapshots() do
+    dir = "bench/snapshots"
+    snapshots =
+      case File.ls(dir) do
+        {:error, _} -> []
+        {:ok, files} ->
+          case files |> Enum.sort |> Enum.reverse do
+            [a,b|_] ->  [b,a]
+            other -> other
+          end
+      end
+      |> Enum.map(&Path.join(dir, &1))
+    if snapshots == [] do
+      Mix.raise "No snapshots found. Pass - to read from stdin"
+    end
+    snapshots
+  end
 end
