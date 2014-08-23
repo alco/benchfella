@@ -50,13 +50,13 @@ defmodule Benchfella do
   defp log(msg), do: IO.puts(:stderr, msg)
 
   def run(bench_time, verbose, format, mem_stats, sys_mem_stats) do
-    if format == :machine do
+    #if format == :machine do
       if mem_stats or sys_mem_stats do
-        log ">> 'mem stats' flag is currently ignored in machine format"
+        log ">> 'mem stats' flag is currently ignored"
       end
       mem_stats = false
       sys_mem_stats = false
-    end
+    #end
 
     if verbose do
       log "Settings:"
@@ -109,43 +109,43 @@ defmodule Benchfella do
     |> Snapshot.pretty_print
   end
 
-  defp print_mem_stats(n, {mem_before, mem_after, mem_after_gc,
-                  mem_bin_before, mem_atom_before, mem_bin_after, mem_atom_after},
-                show_sys)
-  do
-    str_initial = "  mem initial:  #{mem_before}"
-    if show_sys do
-      str_initial = str_initial
-                    <> " proc + #{b2kib(mem_bin_before)} KiB bin +"
-                    <> " #{b2kib(mem_atom_before)} KiB atom"
-    end
-    IO.puts str_initial
-
-    str_after = "  mem after:    #{mem_after}"
-    if show_sys do
-      str_after = str_after
-                  <> " proc + #{b2kib(mem_bin_after)} KiB bin +"
-                  <> " #{b2kib(mem_atom_after)} KiB atom"
-    end
-    IO.puts str_after
-
-    diff_proc = Float.round((mem_after-mem_before) / n, 2)
-    str_diff = "  mem diff:     #{diff_proc} bytes/op"
-    if show_sys do
-      diff_sys = Float.round((mem_bin_after-mem_bin_before + mem_atom_after-mem_atom_before) / n, 2)
-      str_diff = str_diff
-                 <> " proc, #{diff_sys} bytes/op sys"
-    end
-    IO.puts str_diff
-
-    gc_diff = mem_after_gc - mem_before
-    if gc_diff > 0 do
-      IO.puts "  res after gc: #{gc_diff}"
-    end
-    IO.puts ""
-  end
-
-  defp b2kib(bytes), do: Float.round(bytes/1024, 2)
+  #  defp print_mem_stats(n, {mem_before, mem_after, mem_after_gc,
+  #                  mem_bin_before, mem_atom_before, mem_bin_after, mem_atom_after},
+  #                show_sys)
+  #  do
+  #    str_initial = "  mem initial:  #{mem_before}"
+  #    if show_sys do
+  #      str_initial = str_initial
+  #                    <> " proc + #{b2kib(mem_bin_before)} KiB bin +"
+  #                    <> " #{b2kib(mem_atom_before)} KiB atom"
+  #    end
+  #    IO.puts str_initial
+  #
+  #    str_after = "  mem after:    #{mem_after}"
+  #    if show_sys do
+  #      str_after = str_after
+  #                  <> " proc + #{b2kib(mem_bin_after)} KiB bin +"
+  #                  <> " #{b2kib(mem_atom_after)} KiB atom"
+  #    end
+  #    IO.puts str_after
+  #
+  #    diff_proc = Float.round((mem_after-mem_before) / n, 2)
+  #    str_diff = "  mem diff:     #{diff_proc} bytes/op"
+  #    if show_sys do
+  #      diff_sys = Float.round((mem_bin_after-mem_bin_before + mem_atom_after-mem_atom_before) / n, 2)
+  #      str_diff = str_diff
+  #                 <> " proc, #{diff_sys} bytes/op sys"
+  #    end
+  #    IO.puts str_diff
+  #
+  #    gc_diff = mem_after_gc - mem_before
+  #    if gc_diff > 0 do
+  #      IO.puts "  res after gc: #{gc_diff}"
+  #    end
+  #    IO.puts ""
+  #  end
+  #
+  #  defp b2kib(bytes), do: Float.round(bytes/1024, 2)
 
   defp run_bench({{mod, func}}, {total_time, i, count}, follow, config) do
     if follow do

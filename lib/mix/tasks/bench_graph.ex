@@ -15,8 +15,8 @@ defmodule Mix.Tasks.Bench.Graph do
   ## Options
 
       --no-js
-          Produce a single HTML file with no JavaScript and with all the CSS
-          embedded within a `<style>` tag.
+          Produce a single HTML file with graphs rendered as SVG and no
+          JavaScript on the page.
 
   """
 
@@ -51,8 +51,12 @@ defmodule Mix.Tasks.Bench.Graph do
     do_make_graph(snapshots, no_js)
   end
 
-  defp do_make_graph(snapshots, no_js) do
+  defp do_make_graph(snapshots, false) do
     snapshots |> Snapshot.snapshots_to_json |> make_index
+  end
+
+  defp do_make_graph(_snapshots, true) do
+    Mix.raise "Not implemented yet (sorry)"
   end
 
   defp make_index(json) do
