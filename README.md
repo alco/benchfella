@@ -32,6 +32,24 @@ end
 ```
 
 
+When you need to generate inputs for tests at runtime without affecting the run
+time of the tests, use the following trick:
+
+```elixir
+defmodule BasicBench do
+  use Benchfella
+
+  bench "reverse string", [str: gen_string()] do
+    Enum.reverse(str)
+  end
+
+  defp gen_string() do
+    String.duplicate("abc", 10000)
+  end
+end
+```
+
+
 ### `mix bench`
 
 Sample output:
