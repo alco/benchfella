@@ -287,7 +287,8 @@ defmodule Benchfella do
   end
 
   defp measure_once(mod, f, n) do
-    :timer.tc(mod, f, [n])
+    inputs = apply(mod, f, [])
+    :timer.tc(mod, f, [n, nil | inputs])
   end
 
   def add_bench(mod, func_name) do
@@ -299,15 +300,40 @@ defmodule Benchfella do
   end
 
   defmacro bench(name, [do: body]) do
-    quote bind_quoted: [fella: __MODULE__, name: name, body: Macro.escape(body)] do
+    gen_bench_funcs(name, [], body)
+  end
+
+  defmacro bench(name, inputs, [do: body]) do
+    gen_bench_funcs(name, inputs, body)
+  end
+
+  defp gen_bench_funcs(name, inputs, body) do
+    {vars, assigns} = Enum.reduce(inputs, {[], []}, fn {name, {func, meta, _}}, {vars, assigns} ->
+      var = Macro.var(name, nil)
+      val = {func, meta, []}
+      {[var|vars], [quote(do: unquote(var) = unquote(val))|assigns]}
+    end)
+    ignored_vars = Enum.map(vars, fn _ -> quote do _ end end)
+
+    quote bind_quoted: [
+      fella: __MODULE__, name: name, body: Macro.escape(body),
+      assigns: Macro.escape(assigns),
+      vars: Macro.escape(vars),
+      ignored_vars: Macro.escape(ignored_vars)]
+    do
       name = String.to_atom(name)
       fella.add_bench(__MODULE__, name)
 
-      def unquote(name)(n), do: unquote(name)(n, nil)
+      def unquote(name)() do
+        [unquote_splicing(assigns)]
+      end
 
-      def unquote(name)(0, result), do: result
-      def unquote(name)(n, _) do
-        unquote(name)(n-1, unquote(body))
+      def unquote(name)(0, result, unquote_splicing(ignored_vars)) do
+        result
+      end
+
+      def unquote(name)(n, _, unquote_splicing(vars)) do
+        unquote(name)(n-1, unquote(body), unquote_splicing(vars))
       end
     end
   end
