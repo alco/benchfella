@@ -8,17 +8,21 @@ defmodule Mix.Tasks.Bench.Cmp do
 
       mix bench.cmp [options] <snapshot>...
 
-  A snapshot is the output of a single run of `mix bench` without the
-  `--pretty` flag.
+  A snapshot is the output of a single run of `mix bench`.
+
+  If no arguments are given, bench.cmp will try to read one or two latest
+  snapshots from the bench/snapshots directory.
 
   When given one snapshot, `mix bench.cmp` will pretty-print the results.
+  Giving `-` instead of a file name will make bench.cmp read from standard
+  input.
 
   When given two or more snapshots, it will pretty-print the comparison between
   the first and the last one.
 
   ## Options
 
-      -f=<fmt>, --format=<fmt>
+      -f <fmt>, --format=<fmt>
           Which format to use for the deltas when pretty-printing.
 
           One of: ratio, percent.
@@ -33,7 +37,7 @@ defmodule Mix.Tasks.Bench.Cmp do
     {snapshots, options} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
         {opts, [], []} ->
-          {["-"], opts}
+          {locate_snapshots(), opts}
         {opts, snapshots, []} ->
           {snapshots, opts}
         {_, _, [{opt, val}|_]} ->
@@ -43,11 +47,25 @@ defmodule Mix.Tasks.Bench.Cmp do
       |> normalize_options()
 
     case snapshots do
+      [] -> Mix.raise "No snapshots found. Pass - to read from stdin"
       [snapshot] -> pretty_print(snapshot)
       [first|rest] ->
         last = List.last(rest)
         compare(first, last, Map.get(options, :format, :ratio))
     end
+  end
+
+  defp locate_snapshots() do
+    dir = "bench/snapshots"
+    case File.ls(dir) do
+      {:error, _} -> []
+      {:ok, files} ->
+        case files |> Enum.sort |> Enum.reverse do
+          [a,b|_] ->  [b,a]
+          other -> other
+        end
+    end
+    |> Enum.map(&Path.join(dir, &1))
   end
 
   defp normalize_options({snapshots, options}) do
@@ -67,10 +85,13 @@ defmodule Mix.Tasks.Bench.Cmp do
   end
 
   defp pretty_print(path) do
+    IO.puts "#{path}\n"
     path |> File.read! |> Snapshot.parse |> Snapshot.pretty_print
   end
 
   defp compare(path1, path2, format) do
+    IO.puts "#{path1} vs\n#{path2}\n"
+
     snapshot1 = File.read!(path1) |> Snapshot.parse()
     snapshot2 = File.read!(path2) |> Snapshot.parse()
     {diffs, leftover} = Snapshot.compare(snapshot1, snapshot2, format)
