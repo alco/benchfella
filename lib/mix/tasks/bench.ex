@@ -14,10 +14,14 @@ defmodule Mix.Tasks.Bench do
 
   By default, all files matching `bench/**/*_bench.exs` are run.
 
+  The results of a test run are pretty-printed to the standard output.
+  Additionally, the output in machine format is written to a snapshot file.
+
   ## Options
 
-      -p, --pretty
-          Discard machine output and print only the prettified version.
+      -n, --no-pretty
+          Instead of pretty-printing the output, print it in the format that
+          can be parsed by bench.cmp and bench.graph.
 
       -q, --quiet
           Don't print progress report while the tests are running.
@@ -28,6 +32,15 @@ defmodule Mix.Tasks.Bench do
       -d <duration>, --duration=<duration>
           Minimum duration of each test in seconds.
 
+      -o <path>, --output=<path>
+          Path to the directory in which to store snapshots. The directory will
+          be created if necessary.
+
+          Setting it to an empty value will prevent benchfella from creating
+          any files or directories.
+
+          Default: bench/snapshots.
+
       -m, --mem-stats
           Gather memory usage statistics.
 
@@ -37,9 +50,9 @@ defmodule Mix.Tasks.Bench do
   """
 
   def run(args) do
-    switches = [pretty: :boolean, quiet: :boolean, duration: :float,
-                mem_stats: :boolean, sys_mem_stats: :boolean]
-    aliases = [p: :pretty, q: :quiet, d: :duration, m: :mem_stats]
+    switches = [no_pretty: :boolean, quiet: :boolean, duration: :float,
+                mem_stats: :boolean, sys_mem_stats: :boolean, output: :string]
+    aliases = [n: :no_pretty, q: :quiet, d: :duration, m: :mem_stats, o: :output]
     {paths, options} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
         {opts, paths, []} -> {paths, opts}
@@ -81,7 +94,7 @@ defmodule Mix.Tasks.Bench do
   defp normalize_options({paths, options}) do
     options =
       Enum.reduce(options, %{}, fn
-        {:pretty, flag}, map -> Map.put(map, :format, pretty_to_format(flag))
+        {:no_pretty, flag}, map -> Map.put(map, :format, pretty_to_format(!flag))
         {:quiet, flag}, map -> Map.put(map, :verbose, not flag)
         {:mem_stats, flag}, map -> Map.update(map, :mem_stats, flag, & &1)
         {:sys_mem_stats, true}, map -> Map.put(map, :mem_stats, :include_sys)

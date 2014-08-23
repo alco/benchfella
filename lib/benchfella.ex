@@ -2,6 +2,7 @@ defmodule Benchfella do
   @bench_tab :"#{__MODULE__}:tests"
   @results_tab :"#{__MODULE__}:results"
   @bench_sec 1
+  @default_outdir "bench/snapshots"
 
   alias Benchfella.Snapshot
 
@@ -29,17 +30,18 @@ defmodule Benchfella do
         :error              -> {false, false}
       end
 
-    format = Keyword.get(opts, :format, :machine)
+    format = Keyword.get(opts, :format, :pretty)
     verbose = Keyword.get(opts, :verbose, true)
 
-    # output = case Keyword.fetch(opts, :output) do
-    #   {:ok, path} when is_binary(path) -> path
-    #   :error -> :default
-    # end
+    outdir = case Keyword.fetch(opts, :output) do
+      {:ok, path} when is_binary(path) -> path
+      :error -> @default_outdir
+    end
+    if outdir != "", do: File.mkdir_p!(outdir)
 
     System.at_exit(fn
       0 -> run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
-                    verbose, format, collect_mem_stats, sys_mem_stats)
+                    verbose, format, outdir, collect_mem_stats, sys_mem_stats)
       status -> status
     end)
   end
@@ -49,7 +51,7 @@ defmodule Benchfella do
 
   defp log(msg), do: IO.puts(:stderr, msg)
 
-  def run(bench_time, verbose, format, mem_stats, sys_mem_stats) do
+  def run(bench_time, verbose, format, outdir, mem_stats, sys_mem_stats) do
     #if format == :machine do
       if mem_stats or sys_mem_stats do
         log ">> 'mem stats' flag is currently ignored"
@@ -79,10 +81,10 @@ defmodule Benchfella do
       log ""
     end
 
-    print_results(results, bench_time, format, mem_stats, sys_mem_stats)
+    print_results(results, bench_time, format, outdir, mem_stats, sys_mem_stats)
   end
 
-  defp print_results(results, bench_time, format, collect_mem_stats, sys_mem_stats) do
+  defp print_results(results, bench_time, format, outdir, collect_mem_stats, sys_mem_stats) do
     iodata = [
       "duration:", "#{musec2sec(bench_time)};",
       "mem stats:", "#{collect_mem_stats};",
@@ -94,19 +96,41 @@ defmodule Benchfella do
       #  print_mem_stats(n, mem_stats, sys_mem_stats)
       #end
     end)
-    print_formatted_data(iodata, format)
+    print_formatted_data(iodata, format, outdir)
   end
 
-  defp print_formatted_data(iodata, :machine) do
+  defp print_formatted_data(iodata, :machine, outdir) do
+    write_snapshot(iodata, outdir)
+
     IO.write(iodata)
   end
 
-  defp print_formatted_data(iodata, :pretty) do
+  defp print_formatted_data(iodata, :pretty, outdir) do
+    write_snapshot(iodata, outdir)
+
     iodata
     |> Enum.map(&IO.iodata_to_binary/1)
     |> Enum.join("")
     |> Snapshot.parse
     |> Snapshot.pretty_print
+  end
+
+  defp write_snapshot(_iodata, "") do
+    nil
+  end
+
+  defp write_snapshot(iodata, dir) do
+    filename = gen_snapshot_name()
+    File.write!(Path.join(dir, filename), iodata)
+  end
+
+  defp gen_snapshot_name() do
+    # FIXME: think about including additional info in the filename, like
+    # indication of which tests were run or test settings
+    {{year,month,day}, {hour,min,sec}} = :calendar.now_to_local_time(:erlang.now)
+    :io_lib.format('~B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0B.snapshot',
+                                            [year, month, day, hour, min, sec])
+    |> List.to_string
   end
 
   #  defp print_mem_stats(n, {mem_before, mem_after, mem_after_gc,
