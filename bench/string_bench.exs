@@ -8,7 +8,7 @@ defmodule StringBench do
     String.reverse @str
   end
 
-  bench "reverse string dynamic", [str: make_string] do
+  bench "reverse string dynamic", [str: make_string()] do
     String.reverse(str)
   end
 
