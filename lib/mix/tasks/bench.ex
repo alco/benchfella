@@ -41,6 +41,9 @@ defmodule Mix.Tasks.Bench do
 
           Default: bench/snapshots.
 
+      --no-compile
+          Do not compile the target project before running benchmarks.
+
       -m, --mem-stats
           Gather memory usage statistics.
 
@@ -51,9 +54,10 @@ defmodule Mix.Tasks.Bench do
 
   def run(args) do
     switches = [no_pretty: :boolean, quiet: :boolean, duration: :float,
-                mem_stats: :boolean, sys_mem_stats: :boolean, output: :string]
+                mem_stats: :boolean, sys_mem_stats: :boolean, output: :string,
+                no_compile: :boolean]
     aliases = [n: :no_pretty, q: :quiet, d: :duration, m: :mem_stats, o: :output]
-    {paths, options} =
+    {paths, options, no_compile} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
         {opts, paths, []} -> {paths, opts}
         {_, _, [{opt, val}|_]} ->
@@ -61,8 +65,18 @@ defmodule Mix.Tasks.Bench do
           Mix.raise "Invalid option: #{opt}#{valstr}"
       end
       |> normalize_options()
+
+    prepare_mix_project(no_compile)
+
     Process.put(:"benchfella cli options", options)
     load_bench_files(paths)
+  end
+
+  defp prepare_mix_project(no_compile) do
+    # Set up the target project's paths
+    Mix.Project.get!
+    unless no_compile, do: Mix.Task.run("compile", [])
+    Mix.Task.run("loadpaths", [])
   end
 
   defp load_bench_files([]) do
@@ -101,8 +115,8 @@ defmodule Mix.Tasks.Bench do
         {:sys_mem_stats, _}, map -> map
         {k, v}, map -> Map.put(map, k, v)
       end)
-      |> Enum.to_list()
-    {paths, options}
+    {no_compile, options} = Map.pop(options, :no_compile)
+    {paths, Enum.to_list(options), no_compile}
   end
 
   defp pretty_to_format(true), do: :pretty
