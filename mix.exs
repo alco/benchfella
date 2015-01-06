@@ -3,7 +3,7 @@ defmodule Benchfella.Mixfile do
 
   def project do
     [app: :benchfella,
-     version: "0.0.2",
+     version: "0.1.0",
      elixir: ">= 0.15.0 and < 2.0.0"]
   end
 

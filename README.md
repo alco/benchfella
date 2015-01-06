@@ -9,7 +9,7 @@ Benchmarking tool for Elixir.
 You can clone the repository and create tests in the `bench/` directory. Or you
 can install an archive locally to make bench tasks available system-wide:
 
-    mix archive.install https://github.com/alco/benchfella/releases/download/archive/benchfella-0.0.2.ez
+    mix archive.install https://github.com/alco/benchfella/releases/download/v0.1.0/benchfella-0.1.0.ez
 
 
 ## Usage
