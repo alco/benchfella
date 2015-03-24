@@ -91,7 +91,7 @@ defmodule Benchfella do
       "sys mem stats:", "#{sys_mem_stats}",
       "\nmodule;test;tags;iterations;elapsed\n",
     ] ++ Enum.map(results, fn {{mod, f}, n, elapsed, _mem_stats} ->
-      :io_lib.format('~s;~s;;~B;~B~n', [inspect(mod), "#{f}", n, elapsed])
+      :io_lib.format('~s\t~s\t\t~B\t~B~n', [inspect(mod), "#{f}", n, elapsed])
       #if collect_mem_stats do
       #  print_mem_stats(n, mem_stats, sys_mem_stats)
       #end
@@ -296,10 +296,21 @@ defmodule Benchfella do
   end
 
   def add_bench(mod, func_name) do
+    validate_name!(inspect(mod))
+    validate_name!(Atom.to_string(func_name))
     try do
       :ets.insert(@bench_tab, {{mod, func_name}})
     catch
       :error, :badarg -> raise "Benchfella is not started"
+    end
+  end
+
+  defp validate_name!(name) do
+    if not String.printable?(name) or Regex.match?(~r/\n|\t/, name) do
+      fatal """
+      ** (Error) Invalid characters in the name #{inspect name}.
+         Only printable characters are allowed except for \\t and \\n.
+      """
     end
   end
 

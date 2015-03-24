@@ -18,7 +18,7 @@ defmodule Benchfella.Snapshot do
     tests =
       rest
       |> Enum.reject(&(&1 == ""))
-      |> Enum.map(&String.split(&1, ";"))
+      |> Enum.map(&String.split(&1, "\t"))
       |> Enum.map(fn [mod, test, tags, iter, elapsed] ->
         tags =
           String.split(tags, ",")
