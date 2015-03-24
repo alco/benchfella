@@ -71,12 +71,13 @@ defmodule Benchfella do
     :ets.new(@results_tab, [:named_table, :set])
     bench_count = :ets.info(@bench_tab, :size)
     bench_config = {bench_time, mem_stats}
-    {total_time, _, _} =
-      :ets.foldl(&run_bench(&1, &2, verbose, bench_config), {0, 1, bench_count}, @bench_tab)
+    {total_time, _, _, _} =
+      :ets.foldl(&run_bench(&1, &2, verbose, bench_config), {0, 1, bench_count, nil}, @bench_tab)
     results = :ets.foldl(&collect_results/2, [], @results_tab)
 
     if verbose do
       sec = Float.round(total_time / 1_000_000, 2)
+      log ""
       log "Finished in #{sec} seconds"
       log ""
     end
@@ -171,16 +172,19 @@ defmodule Benchfella do
   #
   #  defp b2kib(bytes), do: Float.round(bytes/1024, 2)
 
-  defp run_bench({{mod, func}}, {total_time, i, count}, follow, config) do
+  defp run_bench({{mod, func}}, {total_time, i, count, last_mod}, follow, config) do
     if follow do
-      log "[#{format_now()}] #{i}/#{count}: #{bench_name(mod, func)}"
+      if mod != last_mod do
+        log ["## ", inspect(mod)]
+      end
+      log "[#{format_now()}] #{i}/#{count}: #{func}"
     end
     {elapsed, _} = :timer.tc(fn ->
       inputs = apply(mod, func, [])
       {n, elapsed, mem_stats} = measure_func(mod, func, inputs, config)
       :ets.insert(@results_tab, {{mod, func}, n, elapsed, mem_stats})
     end)
-    {total_time+elapsed, i+1, count}
+    {total_time+elapsed, i+1, count, mod}
   end
 
   defp format_now() do
@@ -192,10 +196,6 @@ defmodule Benchfella do
   defp collect_results({{mod, f}, n, elapsed, mem_stats}, list) do
     result = {{mod, f}, n, elapsed, mem_stats}
     [result|list]
-  end
-
-  defp bench_name(mod, f) do
-    "#{inspect mod}.#{f}"
   end
 
 

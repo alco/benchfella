@@ -80,24 +80,32 @@ defmodule Benchfella.Snapshot do
 
 
   def pretty_print(%Snapshot{tests: tests}) do
-    {tests, max_len} = Enum.map_reduce(tests, 0, fn {mod, test, _, iter, elapsed}, max_len ->
-      name = bench_name(mod, test)
-      len = String.length(name)
-      { {name, iter, elapsed}, max(len, max_len)}
+    {tests, max_name_len} =
+      Enum.map_reduce(tests, 0, fn {mod_name, test_name, _, iter, elapsed}, max_len ->
+        len = String.length(test_name)
+        {{mod_name, test_name, iter, elapsed}, max(len, max_len)}
+      end)
+    groups = Enum.group_by(tests, &elem(&1, 0))
+    Enum.each(groups, fn {group_name, tests} ->
+      IO.puts ["## ", group_name]
+      tests = Enum.map(tests, fn {_, test_name, iter, elapsed} -> {test_name, iter, elapsed} end)
+      pretty_print_group(tests, max_name_len)
     end)
+  end
 
+  defp pretty_print_group(tests, max_name_len) do
     tests
     |> Enum.sort(fn {_, iter1, elapsed1}, {_, iter2, elapsed2} ->
       elapsed1/iter1 < elapsed2/iter2
     end)
     |> Enum.each(fn {name, n, elapsed} ->
       musec = elapsed / n
-      name = [name, ?:]
-      :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_len-1, name, n, musec])
+      :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_name_len-1, name, n, musec])
     end)
+    IO.puts ""
   end
 
-  defp bench_name(mod, test), do: "#{mod}.#{test}"
+  def bench_name(mod, test), do: "[#{mod}] #{test}"
 
 
   def to_json(%Snapshot{tests: tests, options: options}) do
