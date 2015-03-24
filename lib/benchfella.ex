@@ -211,8 +211,12 @@ defmodule Benchfella do
     case measure_n(mod, f, inputs, n, collect_mem_stats) do
       {elapsed, ^result, n, mem_stats} ->
         measure_func(mod, f, inputs, {n, elapsed, result, mem_stats}, config)
-      _ ->
-        raise "Got different result between iterations"
+      {_, other, _, _} ->
+        fatal """
+        ** (Error) Different return values between iterations.
+         Expected: #{inspect result}
+              Got: #{inspect other}
+        """
     end
   end
 
@@ -336,5 +340,10 @@ defmodule Benchfella do
         unquote(name)(n-1, unquote(body), unquote_splicing(vars))
       end
     end
+  end
+
+  defp fatal(msg) do
+    IO.puts :stderr, msg
+    System.halt(1)
   end
 end
