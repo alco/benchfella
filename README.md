@@ -6,11 +6,31 @@ Benchmarking tool for Elixir.
 
 ## Installation
 
-You can clone the repository and create tests in the `bench/` directory. Or you
-can install an archive locally to make bench tasks available system-wide:
+Choose how you'd like to install the custom Mix tasks:
 
-    mix archive.install https://github.com/alco/benchfella/releases/download/v0.1.0/benchfella-0.1.0.ez
+  1. As an archive:
 
+     ```
+     mix archive.install https://github.com/alco/benchfella/releases/download/v0.1.0/benchfella-0.1.0.ez
+     ```
+
+     This will make the custom tasks available to `mix` regardless of where it is invoked, just like
+     the builtin tasks are.
+
+     **Caveat**: the archive may be outdated when there is development happening on the master
+     branch.
+
+  2. Add `benchfella` as a dependency to your project:
+
+     ```elixir
+     # in your mix.exs
+
+     defp deps do
+       [{:benchfella, github: "alco/benchfella"}]
+     end
+     ```
+
+     This will make the new tasks available only in the root directory of your Mix project.
 
 ## Usage
 
@@ -30,7 +50,6 @@ defmodule BasicBench do
   end
 end
 ```
-
 
 When you need to generate inputs for tests at runtime without affecting the run
 time of the tests, use the following trick:
@@ -54,23 +73,27 @@ end
 
 Sample output:
 
-```
+```sh
 $ mix bench
 Settings:
   duration:      1.0 s
   mem stats:     false
   sys mem stats: false
 
-[02:53:15] 1/4: StringBench.reverse string
-[02:53:18] 2/4: BinBench.binary_part
-[02:53:19] 3/4: BinBench.matching
-[02:53:25] 4/4: ListBench.reverse list
-Finished in 12.2 seconds
+## StringBench
+[01:17:08] 1/3: reverse string
+[01:17:11] 2/3: reverse string dynamic
+## ListBench
+[01:17:14] 3/3: reverse list
 
-BinBench.binary_part:        100000000   0.01 µs/op
-BinBench.matching:           100000000   0.05 µs/op
-ListBench.reverse list:          50000   41.33 µs/op
-StringBench.reverse string:       1000   2474.14 µs/op
+Finished in 9.23 seconds
+
+## ListBench
+reverse list                 50000   50.29 µs/op
+
+## StringBench
+reverse string                1000   2749.31 µs/op
+reverse string dynamic        1000   2773.01 µs/op
 ```
 
 
@@ -78,24 +101,24 @@ StringBench.reverse string:       1000   2474.14 µs/op
 
 To compare results between multiple runs, use `mix bench.cmp`.
 
-```
-$ mix bench -n bench/benchfella/* >snapshot1.txt
-Settings:
-  duration:      1.0 s
-  mem stats:     false
-  sys mem stats: false
+```sh
+# Run 'mix bench' one more time.
+# Each run automatically saves a snapshot in bench/snapshots.
+$ mix bench
+...
 
-[02:55:43] 1/3: BinBench.binary_part
-[02:55:45] 2/3: BinBench.matching
-[02:55:50] 3/3: ListBench.reverse list
-Finished in 9.57 seconds
+# 'mix bench.cmp' will read the two latest snapshots by default.
+# You could also pass the snapshot files to compare as arguments.
+$ mix bench.cmp -f percent
+bench/snapshots/2015-03-26T01:17:17.snapshot vs
+bench/snapshots/2015-03-26T01:19:30.snapshot
 
-$ mix bench -q -n bench/benchfella/* >snapshot2.txt
+## ListBench
+reverse list              -10.32%
 
-$ mix bench.cmp -f percent snapshot1.txt snapshot2.txt
-BinBench.matching:      -6.44%
-ListBench.reverse list: -1.28%
-BinBench.binary_part:   -0.83%
+## StringBench
+reverse string dynamic    +2.26%
+reverse string            +3.33%
 ```
 
 
@@ -107,12 +130,16 @@ the raw data obtained from running `mix bench`.
 ```sh
 # run the benchmarks twice
 $ mix bench
+...
 $ mix bench
+...
 
-# snapshots are automatically saved into bench/snapshots directory, so we can
-# omit arguments from bench.graph
+# 'mix bench.graph' works similarly to 'mix bench.cmp' except it can display
+# all given snapshots on one graph.
 $ mix bench.graph
 Wrote bench/graphs/index.html
+
+$ open bench/graphs/index.html
 ```
 
 ![Graph example](bench_graph.png "Graph example")
