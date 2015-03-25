@@ -40,24 +40,27 @@ defmodule Benchfella.Snapshot do
   defp parse_bool("true"), do: true
 
   def compare(%Snapshot{tests: tests1}, %Snapshot{tests: tests2}, format \\ :ratio) do
-    {test_map1, name_set1} = extrace_test_names(tests1)
-    {test_map2, name_set2} = extrace_test_names(tests2)
+    {test_map1, name_set1} = extract_test_names(tests1)
+    {test_map2, name_set2} = extract_test_names(tests2)
     common_tests = Set.intersection(name_set1, name_set2)
-    diffs = Enum.reduce(common_tests, %{}, fn name, diffs ->
-      {count, elapsed} = test_map1[name]
+    diffs = Enum.reduce(common_tests, %{}, fn key, diffs ->
+      {count, elapsed} = test_map1[key]
       result1 = elapsed / count
 
-      {count, elapsed} = test_map2[name]
+      {count, elapsed} = test_map2[key]
       result2 = elapsed / count
 
-      Map.put(diffs, name, diff(result1, result2, format))
+      Map.put(diffs, key, diff(result1, result2, format))
     end)
-    {diffs, symm_diff(name_set1, name_set2) |> Enum.into([])}
+    grouped_diffs = Enum.reduce(diffs, %{}, fn {{mod, test}, diff}, groups ->
+      Map.update(groups, mod, Map.put(%{}, test, diff), &Map.put(&1, test, diff))
+    end)
+    {grouped_diffs, symm_diff(name_set1, name_set2) |> Enum.into([])}
   end
 
-  defp extrace_test_names(tests) do
+  defp extract_test_names(tests) do
     Enum.reduce(tests, {%{}, HashSet.new}, fn {mod, test, _tags, iter, elapsed}, {map, set} ->
-      name = bench_name(mod, test)
+      name = {mod, test}
       {Map.put(map, name, {iter, elapsed}), Set.put(set, name)}
     end)
   end

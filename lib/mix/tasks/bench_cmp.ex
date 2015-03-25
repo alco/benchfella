@@ -80,14 +80,32 @@ defmodule Mix.Tasks.Bench.Cmp do
 
     snapshot1 = File.read!(path1) |> Snapshot.parse()
     snapshot2 = File.read!(path2) |> Snapshot.parse()
-    {diffs, leftover} = Snapshot.compare(snapshot1, snapshot2, format)
+    {grouped_diffs, leftover} = Snapshot.compare(snapshot1, snapshot2, format)
 
-    max_len = Enum.reduce(diffs, 0, fn {name, _}, len -> max(len, String.length(name)) end)
+    max_name_len =
+      grouped_diffs
+      |> Enum.flat_map(fn {_, diffs} -> diffs end)
+      |> Enum.reduce(0, fn {name, _}, len -> max(len, String.length(name)) end)
 
+    Enum.each(grouped_diffs, fn {mod, diffs} ->
+      IO.puts ["## ", mod]
+      print_diffs(diffs, max_name_len, format)
+      IO.puts ""
+    end)
+
+    unless leftover == [] do
+      # FIXME: when more than 2 snapshots are given, this wording may be imprecise
+      IO.puts "These tests appeared only in one of the snapshots:"
+      Enum.each(leftover, fn {mod, test} -> IO.puts ["[", mod, "] ", test] end)
+    end
+  end
+
+  defp print_diffs(diffs, max_name_len, format) do
     diffs
     |> Enum.sort(fn {_, diff1}, {_, diff2} -> diff1 < diff2 end)
     |> Enum.each(fn {name, diff} ->
-      :io.format('~*.s ', [-max_len-1, name<>":"])
+      spacing = 3
+      :io.format('~*.s ', [-max_name_len-spacing, name])
       color = choose_color(diff, format)
       if format == :percent do
         diff = Snapshot.format_percent(diff)
@@ -95,12 +113,6 @@ defmodule Mix.Tasks.Bench.Cmp do
       colordiff = IO.ANSI.format color ++ ["#{diff}"]
       IO.puts colordiff
     end)
-
-    unless leftover == [] do
-      # FIXME: when more than 2 snapshots are given, this wording may be imprecise
-      IO.puts "\nThese tests appeared only in one of the snapshots:"
-      Enum.each(leftover, fn x -> IO.write "  "; IO.puts x end)
-    end
   end
 
   defp choose_color(diff, :ratio) do
