@@ -68,6 +68,32 @@ defmodule BasicBench do
 end
 ```
 
+Benchfella provides `setup_all` and `teardown_all` macros that let you perform some setup
+before the first test in a module is run and do some cleanup after the last test within
+the same module has finished running:
+
+```elixir
+defmodule BasicBench do
+  use Benchfella
+
+  setup_all do
+    Process.flag(:trap_exit, true)
+  end
+
+  teardown_all do
+    Process.flag(:trap_exit, false)
+  end
+
+  bench "process kill" do
+    pid = spawn_link(fn -> receive do end end)
+    Process.exit(pid, :kill)
+    receive do
+      {:EXIT, ^pid, :killed} -> :ok
+    end
+  end
+end
+```
+
 
 ### `mix bench`
 
