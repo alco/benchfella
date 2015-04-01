@@ -3,11 +3,11 @@ defmodule Benchfella do
   @bench_sec 1
   @default_outdir "bench/snapshots"
 
-  @setup_func :"Benchfella.__setup__"
-  @teardown_func :"Benchfella.__teardown__"
+  @setup_func :"bench:__setup__"
+  @teardown_func :"bench:__teardown__"
 
-  @before_each_func :"Benchfella.__before_each__"
-  @after_each_func :"Benchfella.__after_each__"
+  @before_each_func :"bench:__before_each__"
+  @after_each_func :"bench:__after_each__"
 
   alias Benchfella.Snapshot
 
@@ -123,8 +123,9 @@ defmodule Benchfella do
 
   defp run_bench({mod, func}, log_msg_func, config, mod_context) do
     run_bench_with_context(mod, mod_context, log_msg_func.(func), fn context ->
-      inputs = apply(mod, func, [context])
-      measure_func(mod, func, context, inputs, config)
+      func_name = :"bench:#{func}"
+      inputs = apply(mod, func_name, [context])
+      measure_func(mod, func_name, context, inputs, config)
     end)
   end
 
@@ -395,25 +396,27 @@ defmodule Benchfella do
     ignored_vars = Enum.map(vars, fn _ -> quote do _ end end)
 
     quote bind_quoted: [
-      fella: __MODULE__, name: name, body: Macro.escape(body),
+      fella: __MODULE__,
+      bench_name: String.to_atom(name),
+      func_name: bench_func_name(name),
+      body: Macro.escape(body),
       values: Macro.escape(values),
       vars: Macro.escape(vars),
-      ignored_vars: Macro.escape(ignored_vars)]
-    do
-      name = String.to_atom(name)
-      fella.add_bench(__MODULE__, name)
+      ignored_vars: Macro.escape(ignored_vars)
+    ] do
+      fella.add_bench(__MODULE__, bench_name)
 
-      def unquote(name)(var!(bench_context)) do
+      def unquote(func_name)(var!(bench_context)) do
         _ = var!(bench_context)
         [unquote_splicing(values)]
       end
 
-      def unquote(name)(0, result, _, unquote_splicing(ignored_vars)) do
+      def unquote(func_name)(0, result, _, unquote_splicing(ignored_vars)) do
         result
       end
 
-      def unquote(name)(n, _, var!(bench_context), unquote_splicing(vars)) do
-        unquote(name)(n-1, unquote(body), var!(bench_context), unquote_splicing(vars))
+      def unquote(func_name)(n, _, var!(bench_context), unquote_splicing(vars)) do
+        unquote(func_name)(n-1, unquote(body), var!(bench_context), unquote_splicing(vars))
       end
     end
   end
@@ -452,6 +455,10 @@ defmodule Benchfella do
     if function_exported?(mod, @after_each_func, 1) do
       apply(mod, @after_each_func, [bench_context])
     end
+  end
+
+  defp bench_func_name(bench_name) do
+    :"bench:#{bench_name}"
   end
 
   defp fatal(msg) do
