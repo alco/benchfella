@@ -26,14 +26,13 @@ Choose how you'd like to install the custom Mix tasks:
   1. As an archive:
 
      ```
-     mix archive.install https://github.com/alco/benchfella/releases/download/v0.1.0/benchfella-0.1.0.ez
+     mix archive.install https://github.com/alco/benchfella/releases/download/v0.2.0/benchfella-0.2.0.ez
      ```
 
      This will make the custom tasks available to `mix` regardless of where it
      is invoked, just like the builtin tasks are.
 
-     **Caveat**: the archive may be outdated when there is development happening
-     on the master branch.
+     **Caveat**: the archive may keep up with the development on the master branch.
 
   2. Add `benchfella` as a dependency to your project:
 
@@ -41,7 +40,7 @@ Choose how you'd like to install the custom Mix tasks:
      # in your mix.exs
 
      defp deps do
-       [{:benchfella, github: "alco/benchfella"}]
+       [{:benchfella, "0.2.0"}]
      end
      ```
 
