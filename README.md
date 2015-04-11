@@ -35,7 +35,7 @@ Choose how you'd like to install the custom Mix tasks:
      This will make the custom tasks available to `mix` regardless of where it
      is invoked, just like the builtin tasks are.
 
-     **Caveat**: the archive may keep up with the development on the master branch.
+     **Caveat**: the archive may not always keep up with the development on the master branch.
 
   2. Add `benchfella` as a dependency to your project:
 
