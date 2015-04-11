@@ -1,7 +1,7 @@
 Benchfella
 ==========
 
-Benchmarking tool for Elixir.
+Microbenchmarking tool for Elixir.
 
 
 ## Installation
@@ -37,7 +37,7 @@ Choose how you'd like to install the custom Mix tasks:
 ## Usage
 
 Add a directory called `bench` and put files with names that match the pattern
-`*_bench.exs` into it. Then run `mix bench`.
+`*_bench.exs` in it. Then run `mix bench`.
 
 Example:
 
@@ -54,24 +54,20 @@ defmodule BasicBench do
 end
 ```
 
-### Run time values
+```sh
+$ mix bench
+Settings:
+  duration:      1.0 s
+  mem stats:     false
+  sys mem stats: false
 
-When you need to generate inputs for tests at run time without affecting the
-measurements, use the following trick:
+## BasicBench
+[13:23:58] 0/1: hello list
 
-```elixir
-# bench/string_bench.exs
-defmodule StringBench do
-  use Benchfella
+Finished in 3.15 seconds
 
-  bench "reverse string", [str: gen_string()] do
-    String.reverse(str)
-  end
-
-  defp gen_string() do
-    String.duplicate("abc", 10000)
-  end
-end
+## BasicBench
+hello list      500000   5.14 µs/op
 ```
 
 ### `setup_all` and `teardown_all`
@@ -148,31 +144,24 @@ defmodule ETSBench do
 end
 ```
 
-### `mix bench`
+### Run time values
 
-Sample output:
+When you need to generate inputs for tests at run time without affecting the measurements and you
+can't use `before_each_bench/1` hook for that, the following trick can be used:
 
-```sh
-$ mix bench
-Settings:
-  duration:      1.0 s
-  mem stats:     false
-  sys mem stats: false
+```elixir
+# bench/string_bench.exs
+defmodule StringBench do
+  use Benchfella
 
-## StringBench
-[01:17:08] 1/3: reverse string
-[01:17:11] 2/3: reverse string dynamic
-## ListBench
-[01:17:14] 3/3: reverse list
+  bench "reverse string", [str: gen_string()] do
+    String.reverse(str)
+  end
 
-Finished in 9.23 seconds
-
-## ListBench
-reverse list                 50000   50.29 µs/op
-
-## StringBench
-reverse string                1000   2749.31 µs/op
-reverse string dynamic        1000   2773.01 µs/op
+  defp gen_string() do
+    String.duplicate("abc", 10000)
+  end
+end
 ```
 
 ### `mix bench.cmp`

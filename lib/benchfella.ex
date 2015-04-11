@@ -90,7 +90,6 @@ defmodule Benchfella do
       sec = Float.round(total_time / 1_000_000, 2)
       log ""
       log "Finished in #{sec} seconds"
-      log ""
     end
 
     print_results(results, bench_time, format, outdir, mem_stats, sys_mem_stats)
