@@ -1,12 +1,12 @@
 defmodule ETSBench do
   use Benchfella
 
-  before_each_bench(_) do
+  before_each_bench _ do
     tid = :ets.new(:my_table, [:public])
     {:ok, tid}
   end
 
-  after_each_bench(tid) do
+  after_each_bench tid do
     IO.inspect length(:ets.tab2list(tid))
     :ets.delete(tid)
   end

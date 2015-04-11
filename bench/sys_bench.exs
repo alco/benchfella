@@ -1,12 +1,12 @@
 defmodule SysBench do
   use Benchfella
 
-  setup do
+  setup_all do
     depth = :erlang.system_flag(:backtrace_depth, 100)
     {:ok, depth}
   end
 
-  teardown(depth) do
+  teardown_all depth do
     :erlang.system_flag(:backtrace_depth, depth)
   end
 

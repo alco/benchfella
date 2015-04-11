@@ -74,16 +74,16 @@ defmodule StringBench do
 end
 ```
 
-### `setup` and `teardown`
+### `setup_all` and `teardown_all`
 
-`setup/0` lets you perform some code before the first test in a module is run.
+`setup_all/0` lets you perform some code before the first test in a module is run.
 It takes no arguments and should return `{:ok, <context>}` where `<context>` is
-any term, it will be passed into `before_each_bench` and `teardown` (if
-defined). Returning any other value will raise an error and cause the whole
-module to be skipped (FIXME).
+any term, it will be passed into `before_each_bench/1` and `teardown_all/1` if they are
+defined. Returning any other value will raise an error and cause the whole
+module to be skipped.
 
-`teardown/1` lets you do some cleanup after the last test in a module has
-finished running. It takes the context returned from `setup/0` (`nil` by
+`teardown_all/1` lets you do some cleanup after the last test in a module has
+finished running. It takes the context returned from `setup_all/0` (`nil` by
 default) as its argument.
 
 ```elixir
@@ -91,12 +91,12 @@ default) as its argument.
 defmodule SysBench do
   use Benchfella
 
-  setup do
+  setup_all do
     depth = :erlang.system_flag(:backtrace_depth, 100)
     {:ok, depth}
   end
 
-  teardown(depth) do
+  teardown_all depth do
     :erlang.system_flag(:backtrace_depth, depth)
   end
 
@@ -110,15 +110,15 @@ end
 
 ### `before_each_bench` and `after_each_bench`
 
-`before_each_bench/1` runs before each individual test case is executed. It
-takes the context returned from `setup/0` and should return `{:ok,
+`before_each_bench/1` runs before each individual test is executed. It
+takes the context returned from `setup_all/0` and should return `{:ok,
 <bench_context>}` where `<bench_context>` is any term. Returning any other value
-will raise an error and cause the current test case to be skipped (FIXME).
+will raise an error and cause the current test to be skipped.
 
 `<bench_context>` returned from `before_each_bench/1` will be available as the
-`bench_context` variable in each test case.
+`bench_context` variable in each test.
 
-`after_each_bench/1` runs after each individual test case has been executed. It
+`after_each_bench/1` runs after each individual test has been executed. It
 takes the context returned from `before_each_bench/1` as its argument.
 
 ```elixir
@@ -126,12 +126,12 @@ takes the context returned from `before_each_bench/1` as its argument.
 defmodule ETSBench do
   use Benchfella
 
-  before_each_bench(_) do
+  before_each_bench _ do
     tid = :ets.new(:my_table, [:public])
     {:ok, tid}
   end
 
-  after_each_bench(tid) do
+  after_each_bench tid do
     IO.inspect length(:ets.tab2list(tid))
     :ets.delete(tid)
   end

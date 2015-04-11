@@ -3,11 +3,11 @@ defmodule Benchfella do
   @bench_sec 1
   @default_outdir "bench/snapshots"
 
-  @setup_func :"bench:__setup__"
-  @teardown_func :"bench:__teardown__"
+  @setup_func :setup_all
+  @teardown_func :teardown_all
 
-  @before_each_func :"bench:__before_each__"
-  @after_each_func :"bench:__after_each__"
+  @before_each_func :before_each_bench
+  @after_each_func :after_each_bench
 
   alias Benchfella.Snapshot
 
@@ -106,12 +106,19 @@ defmodule Benchfella do
     Enum.flat_map(groups, fn {mod, tests} ->
       if follow, do: log ["## ", inspect(mod)]
 
-      mod_context = run_setup_hook(mod)
       log_msg_func = fn func -> if follow, do: "[#{format_now()}] #{0}/#{count}: #{func}" end
-      results = run_individual_tests(tests, log_msg_func, bench_config, mod_context)
-      run_teardown_hook(mod, mod_context)
-
-      results
+      spawn_with_exit(fn ->
+        result = case run_setup_hook(mod) do
+          {:ok, mod_context} ->
+            results = run_individual_tests(tests, log_msg_func, bench_config, mod_context)
+            run_teardown_hook(mod, mod_context)
+            results
+          _ ->
+            log "Skipping all tests in #{inspect mod}\n"
+            [nil]
+        end
+        exit({:normal, result})
+      end)
     end)
   end
 
@@ -122,21 +129,27 @@ defmodule Benchfella do
   end
 
   defp run_bench({mod, func}, log_msg_func, config, mod_context) do
-    run_bench_with_context(mod, mod_context, log_msg_func.(func), fn context ->
-      func_name = :"bench:#{func}"
+    func_name = bench_func_name(func)
+    run_bench_with_context(mod, func_name, mod_context, log_msg_func.(func), fn context ->
       inputs = apply(mod, func_name, [context])
       measure_func(mod, func_name, context, inputs, config)
     end)
   end
 
-  defp run_bench_with_context(mod, context, log_msg, func) do
-    # TODO: run setup and teardown in a separate process (of which the bench process is a child) to
-    # make automatic cleanup of process resources possible
-    bench_context = run_before_each_hook(mod, context)
-    if log_msg, do: log log_msg
-    result = func.(bench_context)
-    run_after_each_hook(mod, bench_context)
-    result
+  defp run_bench_with_context(mod, func_name, mod_context, log_msg, func) do
+    spawn_with_exit(fn ->
+      result = case run_before_each_hook(mod, mod_context) do
+        {:ok, bench_context} ->
+          if log_msg, do: log log_msg
+          result = func.(bench_context)
+          run_after_each_hook(mod, bench_context)
+          result
+        _ ->
+          log "Skipping #{inspect mod}.#{func_name}\n"
+          nil
+      end
+      exit({:normal, result})
+    end)
   end
 
   defp print_results(results, bench_time, format, outdir, collect_mem_stats, sys_mem_stats) do
@@ -145,11 +158,14 @@ defmodule Benchfella do
       "mem stats:", "#{collect_mem_stats};",
       "sys mem stats:", "#{sys_mem_stats}",
       "\nmodule;test;tags;iterations;elapsed\n",
-    ] ++ Enum.map(results, fn {{mod, f}, {n, elapsed, _mem_stats}} ->
-      :io_lib.format('~s\t~s\t\t~B\t~B~n', [inspect(mod), "#{f}", n, elapsed])
-      #if collect_mem_stats do
-      #  print_mem_stats(n, mem_stats, sys_mem_stats)
-      #end
+    ] ++ Enum.map(results, fn
+      nil -> ""
+      {_, nil} -> ""
+      {{mod, f}, {n, elapsed, _mem_stats}} ->
+        :io_lib.format('~s\t~s\t\t~B\t~B~n', [inspect(mod), "#{f}", n, elapsed])
+        #if collect_mem_stats do
+        #  print_mem_stats(n, mem_stats, sys_mem_stats)
+        #end
     end)
     print_formatted_data(iodata, format, outdir)
   end
@@ -162,6 +178,8 @@ defmodule Benchfella do
 
   defp print_formatted_data(iodata, :pretty, outdir) do
     write_snapshot(iodata, outdir)
+
+    IO.puts ""
 
     iodata
     |> Enum.map(&IO.iodata_to_binary/1)
@@ -330,7 +348,7 @@ defmodule Benchfella do
 
   def add_bench(mod, func_name) do
     validate_name!(inspect(mod))
-    validate_name!(Atom.to_string(func_name))
+    validate_name!(mod, Atom.to_string(func_name))
     try do
       :ets.insert(@bench_tab, {{mod, func_name}})
     catch
@@ -339,9 +357,14 @@ defmodule Benchfella do
   end
 
   defp validate_name!(name) do
+    validate_name!(nil, name)
+  end
+
+  defp validate_name!(mod, name) do
     if not String.printable?(name) or Regex.match?(~r/\n|\t/, name) do
+      module = if mod, do: "#{inspect(mod)}."
       fatal """
-      Invalid characters in the name #{inspect name}.
+      Invalid characters in the name #{module}#{inspect name}.
          Only printable characters are allowed except for \\t and \\n.
       """
     end
@@ -355,7 +378,7 @@ defmodule Benchfella do
     gen_bench_funcs(name, inputs, body)
   end
 
-  defmacro setup([do: body]) do
+  defmacro setup_all([do: body]) do
     quote do
       def unquote(@setup_func)() do
         unquote(body)
@@ -363,7 +386,7 @@ defmodule Benchfella do
     end
   end
 
-  defmacro teardown(mod_context, [do: body]) do
+  defmacro teardown_all(mod_context, [do: body]) do
     quote do
       def unquote(@teardown_func)(unquote(mod_context)) do
         unquote(body)
@@ -422,43 +445,75 @@ defmodule Benchfella do
   end
 
   defp run_setup_hook(mod) do
-    # TODO: an exception raised here should only abort a single module
     if function_exported?(mod, @setup_func, 0) do
-      case apply(mod, @setup_func, []) do
-        {:ok, mod_context} -> mod_context
-        other ->
-          fatal "#{inspect mod}.setup() returned #{inspect other}"
+      try do
+        case apply(mod, @setup_func, []) do
+          {:ok, context} -> {:ok, context}
+          other -> raise "Expected #{inspect mod}.#{@setup_func}/0 to return {:ok, <term>}. "
+                      <> "Got #{inspect other}"
+        end
+      catch
+        kind, error ->
+          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace) |> String.rstrip
       end
+    else
+      {:ok, nil}
     end
   end
 
   defp run_teardown_hook(mod, mod_context) do
-    # TODO: an exception raised here should only abort a single module
     if function_exported?(mod, @teardown_func, 1) do
-      apply(mod, @teardown_func, [mod_context])
+      try do
+        apply(mod, @teardown_func, [mod_context])
+      catch
+        kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace)
+      end
     end
   end
 
   defp run_before_each_hook(mod, mod_context) do
-    # TODO: an exception raised here should only abort a single test
     if function_exported?(mod, @before_each_func, 1) do
-      case apply(mod, @before_each_func, [mod_context]) do
-        {:ok, bench_context} -> bench_context
-        other ->
-          fatal "#{inspect mod}.before_each_bench() returned #{inspect other}"
+      try do
+        case apply(mod, @before_each_func, [mod_context]) do
+          {:ok, bench_context} -> {:ok, bench_context}
+          other -> raise "Expected #{inspect mod}.#{@before_each_func}/1 to return {:ok, <term>}. "
+                      <> "Got #{inspect other}"
+        end
+      catch
+        kind, error ->
+          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace) |> String.rstrip
       end
     end
   end
 
   defp run_after_each_hook(mod, bench_context) do
-    # TODO: an exception raised here should only abort a single test
     if function_exported?(mod, @after_each_func, 1) do
-      apply(mod, @after_each_func, [bench_context])
+      try do
+        apply(mod, @after_each_func, [bench_context])
+      catch
+        kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace)
+      end
     end
   end
 
   defp bench_func_name(bench_name) do
     :"bench:#{bench_name}"
+  end
+
+  defp spawn_with_exit(func) do
+    Process.flag(:trap_exit, true)
+    pid = spawn_link(func)
+    receive do
+      {:EXIT, ^pid, {:normal, result}} -> result
+      {:EXIT, ^pid, error} ->
+        IO.puts :stderr, Exception.format(:exit, Exception.normalize(:exit, error))
+        nil
+    end
+  end
+
+  defp pruned_stacktrace do
+    System.stacktrace
+    |> Enum.take_while(fn {mod, _, _, _} -> mod != __MODULE__ end)
   end
 
   defp fatal(msg) do
