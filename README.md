@@ -1,7 +1,7 @@
 Benchfella
 ==========
 
-Benchmarking tool for Elixir.
+Microbenchmarking tool for Elixir.
 
 
 ## Installation
@@ -14,11 +14,11 @@ Choose how you'd like to install the custom Mix tasks:
      mix archive.install https://github.com/alco/benchfella/releases/download/v0.1.0/benchfella-0.1.0.ez
      ```
 
-     This will make the custom tasks available to `mix` regardless of where it is invoked, just like
-     the builtin tasks are.
+     This will make the custom tasks available to `mix` regardless of where it
+     is invoked, just like the builtin tasks are.
 
-     **Caveat**: the archive may be outdated when there is development happening on the master
-     branch.
+     **Caveat**: the archive may be outdated when there is development happening
+     on the master branch.
 
   2. Add `benchfella` as a dependency to your project:
 
@@ -30,16 +30,19 @@ Choose how you'd like to install the custom Mix tasks:
      end
      ```
 
-     This will make the new tasks available only in the root directory of your Mix project.
+     This will make the new tasks available only in the root directory of your
+     Mix project.
+
 
 ## Usage
 
-Add a directory called `bench` and put files called `*_bench.exs` into it. Then
-run `mix bench`.
+Add a directory called `bench` and put files with names that match the pattern
+`*_bench.exs` in it. Then run `mix bench`.
 
 Example:
 
 ```elixir
+# bench/basic_bench.exs
 defmodule BasicBench do
   use Benchfella
 
@@ -51,28 +54,6 @@ defmodule BasicBench do
 end
 ```
 
-When you need to generate inputs for tests at runtime without affecting the run
-time of the tests, use the following trick:
-
-```elixir
-defmodule BasicBench do
-  use Benchfella
-
-  bench "reverse string", [str: gen_string()] do
-    Enum.reverse(str)
-  end
-
-  defp gen_string() do
-    String.duplicate("abc", 10000)
-  end
-end
-```
-
-
-### `mix bench`
-
-Sample output:
-
 ```sh
 $ mix bench
 Settings:
@@ -80,22 +61,108 @@ Settings:
   mem stats:     false
   sys mem stats: false
 
-## StringBench
-[01:17:08] 1/3: reverse string
-[01:17:11] 2/3: reverse string dynamic
-## ListBench
-[01:17:14] 3/3: reverse list
+## BasicBench
+[13:23:58] 0/1: hello list
 
-Finished in 9.23 seconds
+Finished in 3.15 seconds
 
-## ListBench
-reverse list                 50000   50.29 µs/op
-
-## StringBench
-reverse string                1000   2749.31 µs/op
-reverse string dynamic        1000   2773.01 µs/op
+## BasicBench
+hello list      500000   5.14 µs/op
 ```
 
+### `setup_all` and `teardown_all`
+
+`setup_all/0` lets you perform some code before the first test in a module is run.
+It takes no arguments and should return `{:ok, <context>}` where `<context>` is
+any term, it will be passed into `before_each_bench/1` and `teardown_all/1` if they are
+defined. Returning any other value will raise an error and cause the whole
+module to be skipped.
+
+`teardown_all/1` lets you do some cleanup after the last test in a module has
+finished running. It takes the context returned from `setup_all/0` (`nil` by
+default) as its argument.
+
+```elixir
+# bench/sys_bench.exs
+defmodule SysBench do
+  use Benchfella
+
+  setup_all do
+    depth = :erlang.system_flag(:backtrace_depth, 100)
+    {:ok, depth}
+  end
+
+  teardown_all depth do
+    :erlang.system_flag(:backtrace_depth, depth)
+  end
+
+  @list Enum.to_list(1..10000)
+
+  bench "list reverse" do
+    Enum.reverse(@list)
+  end
+end
+```
+
+### `before_each_bench` and `after_each_bench`
+
+`before_each_bench/1` runs before each individual test is executed. It
+takes the context returned from `setup_all/0` and should return `{:ok,
+<bench_context>}` where `<bench_context>` is any term. Returning any other value
+will raise an error and cause the current test to be skipped.
+
+`<bench_context>` returned from `before_each_bench/1` will be available as the
+`bench_context` variable in each test.
+
+`after_each_bench/1` runs after each individual test has been executed. It
+takes the context returned from `before_each_bench/1` as its argument.
+
+```elixir
+# bench/ets_bench.exs
+defmodule ETSBench do
+  use Benchfella
+
+  before_each_bench _ do
+    tid = :ets.new(:my_table, [:public])
+    {:ok, tid}
+  end
+
+  after_each_bench tid do
+    IO.inspect length(:ets.tab2list(tid))
+    :ets.delete(tid)
+  end
+
+  bench "ets insert", [_unused: inspect_table(bench_context)] do
+    tid = bench_context
+    :ets.insert(tid, {:random.uniform(1000), :x})
+    :ok
+  end
+
+  defp inspect_table(tid) do
+    IO.inspect :ets.info(tid)
+  end
+end
+```
+
+### Run time values
+
+When you need to generate inputs for tests at run time without affecting the measurements and you
+can't use `before_each_bench/1` hook for that, the following trick can be used:
+
+```elixir
+# bench/string_bench.exs
+defmodule StringBench do
+  use Benchfella
+
+  bench "reverse string", [str: gen_string()] do
+    String.reverse(str)
+  end
+
+  defp gen_string() do
+    String.duplicate("abc", 10000)
+  end
+end
+```
 
 ### `mix bench.cmp`
 
@@ -120,7 +187,6 @@ reverse list              -10.32%
 reverse string dynamic    +2.26%
 reverse string            +3.33%
 ```
-
 
 ### `mix bench.graph`
 
