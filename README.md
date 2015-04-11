@@ -18,7 +18,7 @@ The key features of Benchfella:
   * plot results of multiple runs
 
 If you are looking for a more elaborate treatment of the measurements, take a look at
-[bmark](https://github.com/joekain/bmark) which employs mathematical stastics to compare
+[bmark](https://github.com/joekain/bmark) which employs mathematical statistics to compare
 benchmarking results and determine their credibility.
 
 
