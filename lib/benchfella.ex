@@ -496,7 +496,7 @@ defmodule Benchfella do
   end
 
   defp bench_func_name(bench_name) do
-    :"bench:#{bench_name}"
+    :"bench: #{bench_name}"
   end
 
   defp spawn_with_exit(func) do
