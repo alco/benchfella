@@ -3,6 +3,21 @@ Benchfella
 
 Microbenchmarking tool for Elixir.
 
+## Overview
+
+With Benchfella you can define small tests and it will intelligently run each individual one to
+obtain a more or less reliable estimate of the average run time for each test.
+
+The key features of Benchfella:
+
+  * very easy to write and run microbenchmarks
+  * compare measurements between multiple runs
+  * plot results of multiple runs
+
+If you are looking for a more elaborate treatment of the measurements, take a look at
+[bmark](https://github.com/joekain/bmark) which employs mathematical stastics to compare
+benchmarking results and determine their credibility.
+
 
 ## Installation
 
@@ -36,8 +51,11 @@ Choose how you'd like to install the custom Mix tasks:
 
 ## Usage
 
-Add a directory called `bench` and put files with names that match the pattern
-`*_bench.exs` in it. Then run `mix bench`.
+Take a moment to study the output of running `mix help bench` and `mix help bench.cmp` to see all
+supported options.
+
+In order to start writing tests, add a directory called `bench` and put files with names that match
+the pattern `*_bench.exs` in it. Then run `mix bench`.
 
 Example:
 
