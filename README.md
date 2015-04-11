@@ -1,6 +1,9 @@
 Benchfella
 ==========
 
+[![Hex version](https://img.shields.io/hexpm/v/benchfella.svg "Hex version")](https://hex.pm/packages/benchfella)
+![Hex downloads](https://img.shields.io/hexpm/dt/benchfella.svg "Hex downloads")
+
 Microbenchmarking tool for Elixir.
 
 ## Overview
