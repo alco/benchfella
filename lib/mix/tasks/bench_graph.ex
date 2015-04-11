@@ -32,6 +32,11 @@ defmodule Mix.Tasks.Bench.Graph do
 
   """
 
+  @app Mix.Project.config[:app]
+  @priv_dir List.to_string(:code.priv_dir(@app))
+  @ui_css File.read!(Path.join(@priv_dir, "ui.css"))
+  @ui_js File.read!(Path.join(@priv_dir, "ui.js"))
+
   alias Benchfella.Snapshot
   alias Benchfella.CLI.Util
 
@@ -76,14 +81,12 @@ defmodule Mix.Tasks.Bench.Graph do
     graph_dir_path = "bench/graphs"
     graph_path = Path.join([graph_dir_path, "index.html"])
     File.mkdir_p(graph_dir_path)
-    html = index(json, File.read!("priv/ui.css"), File.read!("priv/ui.js"))
+    html = index(json, @ui_css, @ui_js)
     File.write!(graph_path, html)
     IO.puts :stderr, "Wrote #{graph_path}"
   end
 
-  @app Mix.Project.config[:app]
-
   require EEx
-  path = Path.join([List.to_string(:code.priv_dir(@app)), "templates", "index.html.eex"])
+  path = Path.join([@priv_dir, "templates", "index.html.eex"])
   EEx.function_from_file :def, :index, path, [:json, :style, :javascript]
 end
