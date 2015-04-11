@@ -74,8 +74,8 @@ defmodule Benchfella do
     if verbose do
       log "Settings:"
       log "  duration:      #{musec2sec(bench_time)} s"
-      log "  mem stats:     #{mem_stats}"
-      log "  sys mem stats: #{sys_mem_stats}"
+      #log "  mem stats:     #{mem_stats}"
+      #log "  sys mem stats: #{sys_mem_stats}"
       log ""
     end
 

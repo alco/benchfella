@@ -58,8 +58,6 @@ end
 $ mix bench
 Settings:
   duration:      1.0 s
-  mem stats:     false
-  sys mem stats: false
 
 ## BasicBench
 [13:23:58] 0/1: hello list

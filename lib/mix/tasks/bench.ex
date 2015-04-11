@@ -44,19 +44,12 @@ defmodule Mix.Tasks.Bench do
       --no-compile
           Do not compile the target project before running benchmarks.
 
-      -m, --mem-stats
-          Gather memory usage statistics.
-
-      --sys-mem-stats
-          Gather system memory stats. Implies --mem-stats.
-
   """
 
   def run(args) do
     switches = [no_pretty: :boolean, quiet: :boolean, duration: :float,
-                mem_stats: :boolean, sys_mem_stats: :boolean, output: :string,
-                no_compile: :boolean]
-    aliases = [n: :no_pretty, q: :quiet, d: :duration, m: :mem_stats, o: :output]
+                output: :string, no_compile: :boolean]
+    aliases = [n: :no_pretty, q: :quiet, d: :duration, o: :output]
     {paths, options, no_compile} =
       case OptionParser.parse(args, strict: switches, aliases: aliases) do
         {opts, paths, []} -> {paths, opts}
@@ -110,9 +103,6 @@ defmodule Mix.Tasks.Bench do
       Enum.reduce(options, %{}, fn
         {:no_pretty, flag}, map -> Map.put(map, :format, pretty_to_format(!flag))
         {:quiet, flag}, map -> Map.put(map, :verbose, not flag)
-        {:mem_stats, flag}, map -> Map.update(map, :mem_stats, flag, & &1)
-        {:sys_mem_stats, true}, map -> Map.put(map, :mem_stats, :include_sys)
-        {:sys_mem_stats, _}, map -> map
         {k, v}, map -> Map.put(map, k, v)
       end)
     {no_compile, options} = Map.pop(options, :no_compile)
