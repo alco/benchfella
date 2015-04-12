@@ -10,6 +10,7 @@ defmodule Benchfella do
   @after_each_func :after_each_bench
 
   alias Benchfella.Snapshot
+  alias Benchfella.Counter
 
   defmacro __using__(_) do
     quote do
@@ -101,11 +102,15 @@ defmodule Benchfella do
 
   # TODO: extract logging from this function and number running tests externally
   defp run_grouped_tests(groups, count, follow, bench_config) do
+    counter = Counter.start_link(1)
+
     # for each group we return the list of its results
     Enum.flat_map(groups, fn {mod, tests} ->
       if follow, do: log ["## ", inspect(mod)]
 
-      log_msg_func = fn func -> if follow, do: "[#{format_now()}] #{0}/#{count}: #{func}" end
+      log_msg_func = fn func -> if follow do
+        "[#{format_now()}] #{Counter.next(counter)}/#{count}: #{func}" end
+      end
       spawn_with_exit(fn ->
         result = case run_setup_hook(mod) do
           {:ok, mod_context} ->
