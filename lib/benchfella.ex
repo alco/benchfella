@@ -360,6 +360,11 @@ defmodule Benchfella do
     end
   end
 
+  @doc false
+  def bench_func_name(bench_name) do
+    :"bench: #{bench_name}"
+  end
+
   defp validate_name!(name) do
     validate_name!(nil, name)
   end
@@ -424,14 +429,15 @@ defmodule Benchfella do
 
     quote bind_quoted: [
       fella: __MODULE__,
-      bench_name: String.to_atom(name),
-      func_name: bench_func_name(name),
+      bench_name: name,
       body: Macro.escape(body),
       values: Macro.escape(values),
       vars: Macro.escape(vars),
       ignored_vars: Macro.escape(ignored_vars)
     ] do
-      fella.add_bench(__MODULE__, bench_name)
+      fella.add_bench(__MODULE__, String.to_atom(bench_name))
+
+      func_name = fella.bench_func_name(bench_name)
 
       def unquote(func_name)(var!(bench_context)) do
         _ = var!(bench_context)
@@ -498,10 +504,6 @@ defmodule Benchfella do
         kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace)
       end
     end
-  end
-
-  defp bench_func_name(bench_name) do
-    :"bench: #{bench_name}"
   end
 
   defp spawn_with_exit(func) do
