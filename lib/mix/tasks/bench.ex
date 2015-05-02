@@ -12,7 +12,10 @@ defmodule Mix.Tasks.Bench do
   wildcard pattern and only those bench tests that match the pattern will be
   selected.
 
-  By default, all files matching `bench/**/*_bench.exs` are run.
+  By default, all files matching `bench/**/*_bench.exs` are run. Each test
+  will be run as many times as possible for the given duration, every test
+  runs at least once to completion. The total run time and number of iterations
+  are recorded.
 
   The results of a test run are pretty-printed to the standard output.
   Additionally, the output in machine format is written to a snapshot file.

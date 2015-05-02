@@ -57,7 +57,9 @@ Take a moment to study the output of running `mix help bench` and `mix help benc
 supported options.
 
 In order to start writing tests, add a directory called `bench` and put files with names that match
-the pattern `*_bench.exs` in it. Then run `mix bench`.
+the pattern `*_bench.exs` in it. Then run `mix bench`. Benchfella will then run each test for as
+many times as possible in given duration and run each test at least once. It then records the number
+of iterations and total runtime. 
 
 Example:
 
