@@ -29,7 +29,7 @@ Choose how you'd like to install the custom Mix tasks:
   1. As an archive:
 
      ```
-     mix archive.install https://github.com/alco/benchfella/releases/download/v0.2.0/benchfella-0.2.0.ez
+     mix archive.install https://github.com/alco/benchfella/releases/download/v0.2.1/benchfella-0.2.1.ez
      ```
 
      This will make the custom tasks available to `mix` regardless of where it
@@ -43,7 +43,7 @@ Choose how you'd like to install the custom Mix tasks:
      # in your mix.exs
 
      defp deps do
-       [{:benchfella, "0.2.0"}]
+       [{:benchfella, "~> 0.2.0"}]
      end
      ```
 
