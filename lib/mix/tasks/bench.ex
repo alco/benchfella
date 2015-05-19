@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Bench do
   use Mix.Task
 
-  @shortdoc "Benchmark your code"
+  @shortdoc "Microbenchmarking tool for Elixir."
 
   @moduledoc """
   ## Usage
@@ -43,6 +43,10 @@ defmodule Mix.Tasks.Bench do
 
       --no-compile
           Do not compile the target project before running benchmarks.
+
+          NOTE: as of Elixir 1.0.4, this option only works when using the archive.
+          If you include Benchfella as a dependency, your project will always be
+          recompiled prior to running any 'bench.*' task.
 
   """
 
