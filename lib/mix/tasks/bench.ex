@@ -68,8 +68,9 @@ defmodule Mix.Tasks.Bench do
   defp prepare_mix_project(no_compile) do
     # Set up the target project's paths
     Mix.Project.get!
-    unless no_compile, do: Mix.Task.run("compile", [])
-    Mix.Task.run("loadpaths", [])
+    args = ["--no-start"]
+    if no_compile, do: args = args ++ ["--no-compile"]
+    Mix.Task.run("app.start", args)
   end
 
   defp load_bench_files([]) do
