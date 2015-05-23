@@ -25,7 +25,7 @@ defmodule Benchfella do
   end
 
   def start(opts \\ []) do
-    cli_opts = Process.get(:"benchfella cli options", [])
+    cli_opts = Process.get(:benchfella_cli_options, [])
     opts = Keyword.merge(opts, cli_opts)
 
     # spawn a zombie process to keep the table alive
@@ -42,7 +42,7 @@ defmodule Benchfella do
         :error              -> {false, false}
       end
 
-    format = Keyword.get(opts, :format, :pretty)
+    format = Keyword.get(opts, :format, :plain)
     verbose = Keyword.get(opts, :verbose, true)
 
     outdir = case Keyword.fetch(opts, :output) do
@@ -174,13 +174,13 @@ defmodule Benchfella do
     print_formatted_data(iodata, format, outdir)
   end
 
-  defp print_formatted_data(iodata, :machine, outdir) do
+  defp print_formatted_data(iodata, :raw, outdir) do
     write_snapshot(iodata, outdir)
 
     IO.write(iodata)
   end
 
-  defp print_formatted_data(iodata, :pretty, outdir) do
+  defp print_formatted_data(iodata, :plain, outdir) do
     write_snapshot(iodata, outdir)
 
     IO.puts ""

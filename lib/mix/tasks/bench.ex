@@ -19,9 +19,10 @@ defmodule Mix.Tasks.Bench do
 
   ## Options
 
-      -n, --no-pretty
-          Instead of pretty-printing the output, print it in the format that
-          can be parsed by bench.cmp and bench.graph.
+      -f, --format
+          Print it in the specific format.
+
+          One of: raw, plain (default).
 
       -q, --quiet
           Don't print progress report while the tests are running.
@@ -51,22 +52,31 @@ defmodule Mix.Tasks.Bench do
   """
 
   def run(args) do
-    switches = [no_pretty: :boolean, quiet: :boolean, duration: :float,
-                output: :string, no_compile: :boolean]
-    aliases = [n: :no_pretty, q: :quiet, d: :duration, o: :output]
     {paths, options, no_compile} =
-      case OptionParser.parse(args, strict: switches, aliases: aliases) do
-        {opts, paths, []} -> {paths, opts}
-        {_, _, [{opt, val}|_]} ->
-          valstr = if val do "=#{val}" end
-          Mix.raise "Invalid option: #{opt}#{valstr}"
-      end
+      parse_options(args)
       |> normalize_options()
 
     prepare_mix_project(no_compile)
 
-    Process.put(:"benchfella cli options", options)
+    Process.put(:benchfella_cli_options, options)
     load_bench_files(paths)
+  end
+
+  @switches [format: :string, quiet: :boolean,
+             duration: :float, output: :string,
+             no_compile: :boolean]
+
+  @aliases [f: :format, q: :quiet,
+            d: :duration, o: :output]
+
+  defp parse_options(args) do
+    case OptionParser.parse(args, strict: @switches, aliases: @aliases) do
+      {opts, paths, []} -> {paths, opts}
+      {_, _, [{opt, nil} | _]} ->
+        Mix.raise "Invalid option: #{opt}"
+      {_, _, [{opt, val} | _]} ->
+        Mix.raise "Invalid option: #{opt}=#{val}"
+    end
   end
 
   defp prepare_mix_project(no_compile) do
@@ -103,17 +113,31 @@ defmodule Mix.Tasks.Bench do
     end
   end
 
-  defp normalize_options({paths, options}) do
-    options =
-      Enum.reduce(options, %{}, fn
-        {:no_pretty, flag}, map -> Map.put(map, :format, pretty_to_format(!flag))
-        {:quiet, flag}, map -> Map.put(map, :verbose, not flag)
-        {k, v}, map -> Map.put(map, k, v)
-      end)
-    {no_compile, options} = Map.pop(options, :no_compile)
-    {paths, Enum.to_list(options), no_compile}
+  defp normalize_options({paths, opts}) do
+    {no_compile, opts} =
+      Enum.reduce(opts, %{}, &normalize_option/2)
+      |> Map.pop(:no_compile)
+    {paths, Map.to_list(opts), no_compile}
   end
 
-  defp pretty_to_format(true), do: :pretty
-  defp pretty_to_format(false), do: :machine
+  def normalize_option({:format, fmt}, acc) do
+    Map.put(acc, :format, parse_format(fmt))
+  end
+
+  def normalize_option({:quiet, flag}, acc) do
+    Map.put(acc, :verbose, not flag)
+  end
+
+  def normalize_option({key, value}, acc) do
+    Map.put(acc, key, value)
+  end
+
+  defp parse_format(fmt)
+    when fmt in ["raw", "plain"] do
+    String.to_atom(fmt)
+  end
+
+  defp parse_format(fmt) do
+    Mix.raise "Unknown format: #{fmt}"
+  end
 end
