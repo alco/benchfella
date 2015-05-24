@@ -156,22 +156,10 @@ defmodule Benchfella do
     end)
   end
 
-  defp print_results(results, bench_time, format, outdir, collect_mem_stats, sys_mem_stats) do
-    iodata = [
-      "duration:", "#{musec2sec(bench_time)};",
-      "mem stats:", "#{collect_mem_stats};",
-      "sys mem stats:", "#{sys_mem_stats}",
-      "\nmodule;test;tags;iterations;elapsed\n",
-    ] ++ Enum.map(results, fn
-      nil -> ""
-      {_, nil} -> ""
-      {{mod, f}, {n, elapsed, _mem_stats}} ->
-        :io_lib.format('~s\t~s\t\t~B\t~B~n', [inspect(mod), "#{f}", n, elapsed])
-        #if collect_mem_stats do
-        #  print_mem_stats(n, mem_stats, sys_mem_stats)
-        #end
-    end)
-    print_formatted_data(iodata, format, outdir)
+  defp print_results(results, bench_time, format, outdir, mem_stats?, sys_mem_stats?) do
+    musec2sec(bench_time)
+    |> Snapshot.prepare(mem_stats?, sys_mem_stats?, results)
+    |> print_formatted_data(format, outdir)
   end
 
   defp print_formatted_data(iodata, :raw, outdir) do
@@ -183,11 +171,8 @@ defmodule Benchfella do
   defp print_formatted_data(iodata, :plain, outdir) do
     write_snapshot(iodata, outdir)
 
-    IO.puts ""
-
-    iodata
-    |> Enum.map(&IO.iodata_to_binary/1)
-    |> Enum.join("")
+    IO.write "\n"
+    IO.iodata_to_binary(iodata)
     |> Snapshot.parse
     |> Snapshot.pretty_print
   end
