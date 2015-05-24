@@ -204,10 +204,9 @@ defmodule Benchfella do
   defp gen_snapshot_name() do
     # FIXME: think about including additional info in the filename, like
     # indication of which tests were run or test settings
-    {{year,month,day}, {hour,min,sec}} = :calendar.now_to_local_time(:erlang.now)
+    {{year, month, day}, {hour, min, sec}} = :calendar.local_time()
     :io_lib.format('~B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0B.snapshot',
-                                            [year, month, day, hour, min, sec])
-    |> List.to_string
+                   [year, month, day, hour, min, sec])
   end
 
   #  defp print_mem_stats(n, {mem_before, mem_after, mem_after_gc,
