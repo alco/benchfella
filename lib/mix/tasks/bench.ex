@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Bench do
       -f, --format
           Print it in the specific format.
 
-          One of: raw, plain (default).
+          One of: raw, plain (default) and markdown.
 
       -q, --quiet
           Don't print progress report while the tests are running.
@@ -133,7 +133,7 @@ defmodule Mix.Tasks.Bench do
   end
 
   defp parse_format(fmt)
-    when fmt in ["raw", "plain"] do
+    when fmt in ["raw", "plain", "markdown"] do
     String.to_atom(fmt)
   end
 

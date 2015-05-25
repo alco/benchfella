@@ -168,13 +168,13 @@ defmodule Benchfella do
     IO.write(iodata)
   end
 
-  defp print_formatted_data(iodata, :plain, outdir) do
+  defp print_formatted_data(iodata, format, outdir) do
     write_snapshot(iodata, outdir)
 
     IO.write "\n"
     IO.iodata_to_binary(iodata)
     |> Snapshot.parse
-    |> Snapshot.pretty_print
+    |> Snapshot.print(format)
   end
 
   defp write_snapshot(_iodata, "") do
