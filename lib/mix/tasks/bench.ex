@@ -12,13 +12,12 @@ defmodule Mix.Tasks.Bench do
   wildcard pattern and only those bench tests that match the pattern will be
   selected.
 
-  By default, all files matching `bench/**/*_bench.exs` are run. Each test
-  will be run as many times as possible for the given duration, every test
-  runs at least once to completion. The total run time and number of iterations
-  are recorded.
+  By default, all files matching `bench/**/*_bench.exs` are executed. Each test will run for as many
+  iterations as necessary so that the total running time is at least the specified duration.
 
-  The results of a test run are pretty-printed to the standard output.
-  Additionally, the output in machine format is written to a snapshot file.
+  In the end, the number of iterations and the average time of a single iteration are printed to the
+  standard output. Additionally, the output in machine format is written to a snapshot file in
+  `bench/snapshots/`.
 
   ## Options
 
@@ -34,7 +33,7 @@ defmodule Mix.Tasks.Bench do
           redirection.
 
       -d <duration>, --duration=<duration>
-          Minimum duration of each test in seconds.
+          Minimum duration of each test in seconds. Default: 1.
 
       -o <path>, --output=<path>
           Path to the directory in which to store snapshots. The directory will

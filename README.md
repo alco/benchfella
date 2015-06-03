@@ -58,8 +58,7 @@ supported options.
 
 In order to start writing tests, add a directory called `bench` and put files with names that match
 the pattern `*_bench.exs` in it. Then run `mix bench`. Benchfella will then run each test for as
-many times as possible in given duration and run each test at least once. It then records the number
-of iterations and total runtime. 
+many iterations as necessary so that the total running time is at least the specified duration.
 
 Example:
 
@@ -89,6 +88,11 @@ Finished in 3.15 seconds
 ## BasicBench
 hello list      500000   5.14 µs/op
 ```
+
+In the end, the number of iterations and the average time of a single iteration are printed to the
+standard output. Additionally, the output in machine format is written to a snapshot file in
+`bench/snapshots/`.
+
 
 ### `setup_all` and `teardown_all`
 
