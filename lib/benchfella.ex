@@ -102,7 +102,7 @@ defmodule Benchfella do
 
   # TODO: extract logging from this function and number running tests externally
   defp run_grouped_tests(groups, count, follow, bench_config) do
-    counter = Counter.start_link(1)
+    {:ok, counter} = Counter.start_link(1)
 
     # for each group we return the list of its results
     Enum.flat_map(groups, fn {mod, tests} ->
