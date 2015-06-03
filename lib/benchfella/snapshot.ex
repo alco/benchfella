@@ -6,6 +6,19 @@ defmodule Benchfella.Snapshot do
   alias __MODULE__
   alias Benchfella.Json
 
+  def prepare(duration, mem_stats?, sys_mem_stats?, results) do
+    ["duration:", "#{duration};",
+     "mem stats:", "#{mem_stats?};",
+     "sys mem stats:", "#{sys_mem_stats?}",
+     "\nmodule;test;tags;iterations;elapsed\n",
+    ] ++ Enum.map(results, fn
+      {{mod, fun}, {iter, elapsed, _mem_stats}} ->
+        '~s\t~s\t\t~B\t~B~n'
+        |> :io_lib.format([inspect(mod), "#{fun}", iter, elapsed])
+      _otherwise -> ""
+    end)
+  end
+
   def parse(str) do
     [header, _titles | rest] = String.split(str, "\n")
 
@@ -81,35 +94,12 @@ defmodule Benchfella.Snapshot do
     Set.union(Set.difference(set1, set2), Set.difference(set2, set1))
   end
 
-
-  def pretty_print(%Snapshot{tests: tests}) do
-    {tests, max_name_len} =
-      Enum.map_reduce(tests, 0, fn {mod_name, test_name, _, iter, elapsed}, max_len ->
-        len = String.length(test_name)
-        {{mod_name, test_name, iter, elapsed}, max(len, max_len)}
-      end)
-    groups = Enum.group_by(tests, &elem(&1, 0))
-    Enum.each(groups, fn {group_name, tests} ->
-      IO.puts ["## ", group_name]
-      tests = Enum.map(tests, fn {_, test_name, iter, elapsed} -> {test_name, iter, elapsed} end)
-      pretty_print_group(tests, max_name_len)
-    end)
-  end
-
-  defp pretty_print_group(tests, max_name_len) do
-    tests
-    |> Enum.sort(fn {_, iter1, elapsed1}, {_, iter2, elapsed2} ->
-      elapsed1/iter1 < elapsed2/iter2
-    end)
-    |> Enum.each(fn {name, n, elapsed} ->
-      musec = elapsed / n
-      :io.format('~*.s ~10B   ~.2f µs/op~n', [-max_name_len-1, name, n, musec])
-    end)
-    IO.puts ""
+  def print(snapshot, format) do
+    Snapshot.Formatter.format(snapshot, format)
+    |> IO.puts()
   end
 
   def bench_name(mod, test), do: "[#{mod}] #{test}"
-
 
   def to_json(%Snapshot{tests: tests, options: options}) do
     """

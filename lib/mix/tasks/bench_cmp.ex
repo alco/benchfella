@@ -67,12 +67,12 @@ defmodule Mix.Tasks.Bench.Cmp do
   defp parse_pretty_format(other), do: Mix.raise "Undefined pretty format: #{other}"
 
   defp pretty_print("-") do
-    Util.read_all_input() |> Snapshot.parse |> Snapshot.pretty_print
+    Util.read_all_input() |> Snapshot.parse |> Snapshot.print(:plain)
   end
 
   defp pretty_print(path) do
     IO.puts "#{path}\n"
-    path |> File.read! |> Snapshot.parse |> Snapshot.pretty_print
+    File.read!(path) |> Snapshot.parse |> Snapshot.print(:plain)
   end
 
   defp compare(path1, path2, format) do
