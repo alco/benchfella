@@ -17,12 +17,11 @@ defmodule Benchfella.CLI.Util do
   def locate_snapshots(count \\ 2) do
     dir = "bench/snapshots"
     snapshots =
-      case File.ls(dir) do
-        {:error, _}  -> []
-        {:ok, files} ->
-          files |> Enum.sort |> Enum.reverse |> Enum.take(count) |> Enum.reverse
-      end
-      |> Enum.map(&Path.join(dir, &1))
+      Path.join(dir, "*.snapshot")
+      |> Path.wildcard
+      |> Enum.sort(&(&1 > &2))
+      |> Enum.take(count)
+
     if snapshots == [] do
       Mix.raise "No snapshots found. Pass - to read from stdin"
     end
