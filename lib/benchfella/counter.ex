@@ -1,7 +1,6 @@
 defmodule Benchfella.Counter do
   def start_link(initial) do
-    {:ok, pid} = Agent.start_link(fn -> initial end)
-    pid
+    Agent.start_link(fn -> initial end)
   end
 
   def next(counter) do
