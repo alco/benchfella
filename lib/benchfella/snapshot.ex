@@ -7,16 +7,17 @@ defmodule Benchfella.Snapshot do
   alias Benchfella.Json
 
   def prepare(duration, mem_stats?, sys_mem_stats?, results) do
-    ["duration:", "#{duration};",
-     "mem stats:", "#{mem_stats?};",
-     "sys mem stats:", "#{sys_mem_stats?}",
-     "\nmodule;test;tags;iterations;elapsed\n",
-    ] ++ Enum.map(results, fn
-      {{mod, fun}, {iter, elapsed, _mem_stats}} ->
-        '~s\t~s\t\t~B\t~B~n'
-        |> :io_lib.format([inspect(mod), "#{fun}", iter, elapsed])
-      _otherwise -> ""
-    end)
+    [
+      "duration:", to_string(duration), ";",
+      "mem stats:", to_string(mem_stats?), ";",
+      "sys mem stats:", to_string(sys_mem_stats?),
+      "\nmodule;test;tags;iterations;elapsed\n",
+      Enum.map(results, fn
+        {{mod, fun}, {iter, elapsed, _mem_stats}} ->
+          :io_lib.format('~s\t~s\t\t~B\t~B~n', [inspect(mod), "#{fun}", iter, elapsed])
+        _otherwise -> ""
+      end)
+    ]
   end
 
   def parse(str) do
