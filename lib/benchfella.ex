@@ -159,31 +159,29 @@ defmodule Benchfella do
   defp print_results(results, bench_time, format, outdir, mem_stats?, sys_mem_stats?) do
     musec2sec(bench_time)
     |> Snapshot.prepare(mem_stats?, sys_mem_stats?, results)
-    |> print_formatted_data(format, outdir)
+    |> write_snapshot(outdir)
+    |> print_formatted_data(format)
   end
 
-  defp print_formatted_data(iodata, :raw, outdir) do
-    write_snapshot(iodata, outdir)
-
+  defp print_formatted_data(iodata, :raw) do
     IO.write(iodata)
   end
 
-  defp print_formatted_data(iodata, format, outdir) do
-    write_snapshot(iodata, outdir)
-
+  defp print_formatted_data(iodata, format) do
     IO.write "\n"
     IO.iodata_to_binary(iodata)
     |> Snapshot.parse
     |> Snapshot.print(format)
   end
 
-  defp write_snapshot(_iodata, "") do
-    nil
+  defp write_snapshot(iodata, "") do
+    iodata
   end
 
   defp write_snapshot(iodata, dir) do
     filename = gen_snapshot_name()
     File.write!(Path.join(dir, filename), iodata)
+    iodata
   end
 
   defp gen_snapshot_name() do
