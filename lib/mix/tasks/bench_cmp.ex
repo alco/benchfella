@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Bench.Cmp do
 
   ## Options
 
-      -f <fmt>, --format=<fmt>
+      -d <fmt>, --diff=<fmt>
           Which format to use for the deltas when pretty-printing.
 
           One of: ratio, percent.
@@ -31,11 +31,12 @@ defmodule Mix.Tasks.Bench.Cmp do
   alias Benchfella.Snapshot
   alias Benchfella.CLI.Util
 
+  @switches [diff: :string]
+  @aliases [d: :diff]
+
   def run(args) do
-    switches = [format: :string]
-    aliases = [f: :format]
     {snapshots, options} =
-      case OptionParser.parse(args, strict: switches, aliases: aliases) do
+      case OptionParser.parse(args, strict: @switches, aliases: @aliases) do
         {opts, [], []} ->
           {Util.locate_snapshots(), opts}
         {opts, snapshots, []} ->
@@ -50,21 +51,21 @@ defmodule Mix.Tasks.Bench.Cmp do
       [snapshot] -> pretty_print(snapshot)
       [first|rest] ->
         last = List.last(rest)
-        compare(first, last, Map.get(options, :format, :ratio))
+        compare(first, last, Map.get(options, :diff, :ratio))
     end
   end
 
   defp normalize_options({snapshots, options}) do
     options =
       Enum.reduce(options, %{}, fn
-        {:format, fmt}, acc -> Map.put(acc, :format, parse_pretty_format(fmt))
+        {:diff, fmt}, acc -> Map.put(acc, :diff, parse_pretty_format(fmt))
       end)
     {snapshots, options}
   end
 
   defp parse_pretty_format("ratio"), do: :ratio
   defp parse_pretty_format("percent"), do: :percent
-  defp parse_pretty_format(other), do: Mix.raise "Undefined pretty format: #{other}"
+  defp parse_pretty_format(other), do: Mix.raise "Undefined diff format: #{other}"
 
   defp pretty_print("-") do
     Util.read_all_input() |> Snapshot.parse |> Snapshot.print(:plain)
