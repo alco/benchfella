@@ -188,7 +188,7 @@ defmodule Benchfella do
     # FIXME: think about including additional info in the filename, like
     # indication of which tests were run or test settings
     {{year, month, day}, {hour, min, sec}} = :calendar.local_time()
-    :io_lib.format('~B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0B.snapshot',
+    :io_lib.format('~B-~2..0B-~2..0B_~2..0B-~2..0B-~2..0B.snapshot',
                    [year, month, day, hour, min, sec])
   end
 
