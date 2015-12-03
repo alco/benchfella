@@ -22,7 +22,7 @@ defmodule Benchfella.Mixfile do
   defp package do
     [
       files: ["lib", "priv", "mix.exs", "README.md", "LICENSE"],
-      contributors: ["Alexei Sholik"],
+      maintainers: ["Alexei Sholik"],
       licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/alco/benchfella",
