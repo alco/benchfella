@@ -42,7 +42,7 @@ Choose how you'd like to install the custom Mix tasks:
      # in your mix.exs
 
      defp deps do
-       [{:benchfella, "~> 0.2.0"}]
+       [{:benchfella, "~> 0.3.0"}]
      end
      ```
 
