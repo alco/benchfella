@@ -32,9 +32,8 @@ Choose how you'd like to install the custom Mix tasks:
      mix archive.install https://github.com/alco/benchfella/releases/download/v0.2.1/benchfella-0.2.1.ez
      ```
 
-     This will make the custom tasks available to `mix` regardless of where it
-     is invoked, just like the builtin tasks are.
-
+     This will make the custom tasks available to `mix` regardless of where it is invoked, just like
+     the builtin tasks are.
      **Caveat**: the archive may not always keep up with the development on the master branch.
 
   2. Add `benchfella` as a dependency to your project:
@@ -47,18 +46,22 @@ Choose how you'd like to install the custom Mix tasks:
      end
      ```
 
-     This will make the new tasks available only in the root directory of your
-     Mix project.
+     This will make the new tasks available only in the root directory of your Mix project.
 
+Regardless of how Benchfella is installed, it can only find benchmark definitions in a Mix project.
+Any project will do, so if you just want to measure a snippet of code quickly, create a bare-bones
+Mix project with `mix new`, create a subdirectory called `bench` in it and put your benchmark
+definitions there. See examples below.
 
 ## Usage
 
-Take a moment to study the output of running `mix help bench` and `mix help bench.cmp` to see all
-supported options.
+Take a moment to study the output of running `mix help bench` and `mix help bench.cmp` inside your
+Mix project to see all supported options.
 
 In order to start writing tests, add a directory called `bench` and put files with names that match
-the pattern `*_bench.exs` in it. Then run `mix bench`. Benchfella will then run each test for as
-many iterations as necessary so that the total running time is at least the specified duration.
+the pattern `*_bench.exs` in it. Then run `mix bench` in the root directory of your project.
+Benchfella will then load each test and execute it for as many iterations as necessary so that the
+total running time is at least the specified duration.
 
 Example:
 
@@ -201,8 +204,8 @@ $ mix bench
 # 'mix bench.cmp' will read the two latest snapshots by default.
 # You could also pass the snapshot files to compare as arguments.
 $ mix bench.cmp -f percent
-bench/snapshots/2015-03-26T01:17:17.snapshot vs
-bench/snapshots/2015-03-26T01:19:30.snapshot
+bench/snapshots/2015-03-26_01-17-17.snapshot vs
+bench/snapshots/2015-03-26_01-19-30.snapshot
 
 ## ListBench
 reverse list              -10.32%
