@@ -24,31 +24,18 @@ benchmarking results and determine their credibility.
 
 ## Installation
 
-Choose how you'd like to install the custom Mix tasks:
+Add `benchfella` as a dependency to your project:
 
-  1. As an archive:
+```elixir
+# in your mix.exs
 
-     ```
-     mix archive.install https://github.com/alco/benchfella/releases/download/v0.2.1/benchfella-0.2.1.ez
-     ```
+defp deps do
+  [{:benchfella, "~> 0.3.0"}]
+end
+```
 
-     This will make the custom tasks available to `mix` regardless of where it is invoked, just like
-     the builtin tasks are.
-     **Caveat**: the archive may not always keep up with the development on the master branch.
+This will make the new tasks available in the root directory of your Mix project.
 
-  2. Add `benchfella` as a dependency to your project:
-
-     ```elixir
-     # in your mix.exs
-
-     defp deps do
-       [{:benchfella, "~> 0.3.0"}]
-     end
-     ```
-
-     This will make the new tasks available only in the root directory of your Mix project.
-
-Regardless of how Benchfella is installed, it can only find benchmark definitions in a Mix project.
 Any project will do, so if you just want to measure a snippet of code quickly, create a bare-bones
 Mix project with `mix new`, create a subdirectory called `bench` in it and put your benchmark
 definitions there. See examples below.
