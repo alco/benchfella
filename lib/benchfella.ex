@@ -302,9 +302,12 @@ defmodule Benchfella do
     parent = self()
     pid = spawn_link(fn ->
       pid = self()
-      if collect_mem_stats do
+      {mem_before, sys_mem_before} = if collect_mem_stats do
         {:memory, mem_before} = :erlang.process_info(pid, :memory)
         sys_mem_before = :erlang.memory()
+        {mem_before, sys_mem_before}
+      else
+        {nil, nil}
       end
 
       result = measure_once(mod, f, n, context, inputs)
