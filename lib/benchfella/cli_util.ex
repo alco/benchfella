@@ -15,8 +15,9 @@ defmodule Benchfella.CLI.Util do
     snapshots =
       Path.join(dir, "*.snapshot")
       |> Path.wildcard
-      |> Enum.sort(&(&1 > &2))
+      |> Enum.sort(& &1 > &2)
       |> Enum.take(count)
+      |> Enum.reverse
 
     if snapshots == [] do
       Mix.raise "No snapshots found. Pass - to read from stdin"
