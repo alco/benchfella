@@ -190,7 +190,7 @@ $ mix bench
 
 # 'mix bench.cmp' will read the two latest snapshots by default.
 # You could also pass the snapshot files to compare as arguments.
-$ mix bench.cmp -f percent
+$ mix bench.cmp -d percent
 bench/snapshots/2015-03-26_01-17-17.snapshot vs
 bench/snapshots/2015-03-26_01-19-30.snapshot
 
