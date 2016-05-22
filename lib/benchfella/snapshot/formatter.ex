@@ -13,11 +13,20 @@ defmodule Benchfella.Snapshot.Formatter do
   end
 
   defp format_group({group_name, tests}, acc, max_len, :plain) do
-    [acc, ["## ", group_name, ?\n]] ++ format_entries(tests, max_len)
+    [acc, ["## ", group_name, ?\n]] ++
+    [format_header(max_len)] ++
+     format_entries(tests, max_len)
   end
 
   defp format_group({group_name, tests}, acc, max_len, :markdown) do
-    [[acc, ["* ", group_name, ?\n, ?\n, '```\n']] ++ format_entries(tests, max_len) | '```\n']
+    [[acc, ["* ", group_name, ?\n, ?\n, '```\n']] ++
+    [format_header(max_len)] ++
+    format_entries(tests, max_len) | '```\n']
+  end
+
+  defp format_header(max_len) do
+    '~*.s ~10s   ~s ~n'
+    |> :io_lib.format([-max_len - 1, "benchmark name", "iterations", "average time"])
   end
 
   defp format_entries(tests, max_len) do
