@@ -11,7 +11,7 @@ defmodule ETSBench do
     :ets.delete(tid)
   end
 
-  bench "ets insert", [_unused: inspect_table(bench_context)] do
+  bench "ets insert", [unused: inspect_table(bench_context)] do
     tid = bench_context
     :ets.insert(tid, {:random.uniform(1000), :x})
     :ok
