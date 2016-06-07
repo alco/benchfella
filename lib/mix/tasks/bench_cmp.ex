@@ -108,8 +108,9 @@ defmodule Mix.Tasks.Bench.Cmp do
       spacing = 3
       :io.format('~*.s ', [-max_name_len-spacing, name])
       color = choose_color(diff, format)
-      if format == :percent do
-        diff = Snapshot.format_percent(diff)
+      diff = case format do
+        :percent -> Snapshot.format_percent(diff)
+        _        -> diff
       end
       colordiff = IO.ANSI.format color ++ ["#{diff}"]
       IO.puts colordiff

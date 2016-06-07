@@ -85,7 +85,10 @@ defmodule Mix.Tasks.Bench do
     # Set up the target project's paths
     Mix.Project.get!
     args = ["--no-start"]
-    if no_compile, do: args = args ++ ["--no-compile"]
+    args = case no_compile do
+      true -> args ++ ["--no-compile"]
+      _    -> args
+    end
     Mix.Task.run("app.start", args)
   end
 
