@@ -449,7 +449,7 @@ defmodule Benchfella do
         end
       catch
         kind, error ->
-          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace) |> String.rstrip
+          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace()) |> String.rstrip
       end
     else
       {:ok, nil}
@@ -461,7 +461,7 @@ defmodule Benchfella do
       try do
         apply(mod, @teardown_func, [mod_context])
       catch
-        kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace)
+        kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace())
       end
     end
   end
@@ -476,7 +476,7 @@ defmodule Benchfella do
         end
       catch
         kind, error ->
-          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace) |> String.rstrip
+          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace()) |> String.rstrip
       end
     end
   end
@@ -486,7 +486,7 @@ defmodule Benchfella do
       try do
         apply(mod, @after_each_func, [bench_context])
       catch
-        kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace)
+        kind, error -> IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace())
       end
     end
   end
