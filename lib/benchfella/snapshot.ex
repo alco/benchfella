@@ -56,7 +56,7 @@ defmodule Benchfella.Snapshot do
   def compare(%Snapshot{tests: tests1}, %Snapshot{tests: tests2}, format \\ :ratio) do
     {test_map1, name_set1} = extract_test_names(tests1)
     {test_map2, name_set2} = extract_test_names(tests2)
-    common_tests = Set.intersection(name_set1, name_set2)
+    common_tests = MapSet.intersection(name_set1, name_set2)
     diffs = Enum.reduce(common_tests, %{}, fn key, diffs ->
       {count, elapsed} = test_map1[key]
       result1 = elapsed / count
@@ -73,9 +73,9 @@ defmodule Benchfella.Snapshot do
   end
 
   defp extract_test_names(tests) do
-    Enum.reduce(tests, {%{}, HashSet.new}, fn {mod, test, _tags, iter, elapsed}, {map, set} ->
+    Enum.reduce(tests, {%{}, MapSet.new}, fn {mod, test, _tags, iter, elapsed}, {map, set} ->
       name = {mod, test}
-      {Map.put(map, name, {iter, elapsed}), Set.put(set, name)}
+      {Map.put(map, name, {iter, elapsed}), MapSet.put(set, name)}
     end)
   end
 
@@ -92,7 +92,7 @@ defmodule Benchfella.Snapshot do
   defp diff(r1, r2, :percent), do: Float.round((r2 - r1) / r1 * 100, @precision)
 
   defp symm_diff(set1, set2) do
-    Set.union(Set.difference(set1, set2), Set.difference(set2, set1))
+    MapSet.union(MapSet.difference(set1, set2), MapSet.difference(set2, set1))
   end
 
   def print(snapshot, format) do
