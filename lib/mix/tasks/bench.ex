@@ -72,13 +72,8 @@ defmodule Mix.Tasks.Bench do
             d: :duration, o: :output]
 
   defp parse_options(args) do
-    case OptionParser.parse(args, strict: @switches, aliases: @aliases) do
-      {opts, paths, []} -> {paths, opts}
-      {_, _, [{opt, nil} | _]} ->
-        Mix.raise "Invalid option: #{opt}"
-      {_, _, [{opt, val} | _]} ->
-        Mix.raise "Invalid option: #{opt}=#{val}"
-    end
+    {opts, paths, _} = OptionParser.parse(args, strict: @switches, aliases: @aliases)
+    {paths, opts}
   end
 
   defp prepare_mix_project(no_compile) do
