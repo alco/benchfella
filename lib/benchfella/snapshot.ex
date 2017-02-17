@@ -85,7 +85,7 @@ defmodule Benchfella.Snapshot do
 
   def format_percent(num) do
     str = if num > 0 do <<?+>> else <<>> end
-    str <> Float.to_string(num, decimals: @precision) <> "%"
+    str <> :erlang.float_to_binary(num, decimals: @precision) <> "%"
   end
 
   defp diff(r1, r2, :ratio), do: Float.round(r2 / r1, @precision)
