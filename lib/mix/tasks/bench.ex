@@ -93,7 +93,8 @@ defmodule Mix.Tasks.Bench do
   end
 
   defp load_bench_files([]) do
-    Path.wildcard("bench/**/*_bench.exs")
+    Path.wildcard("bench/**/*_bench.exs") ++
+      Path.wildcard("apps/**/bench/**/*_bench.exs")
     |> do_load_bench_files
   end
 
