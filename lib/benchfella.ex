@@ -449,7 +449,7 @@ defmodule Benchfella do
         end
       catch
         kind, error ->
-          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace()) |> String.rstrip
+          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace()) |> String.trim_trailing
       end
     else
       {:ok, nil}
@@ -476,7 +476,7 @@ defmodule Benchfella do
         end
       catch
         kind, error ->
-          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace()) |> String.rstrip
+          IO.puts :stderr, Exception.format(kind, error, pruned_stacktrace()) |> String.trim_trailing
       end
     end
   end

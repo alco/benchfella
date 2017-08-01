@@ -36,7 +36,7 @@ defmodule Benchfella.Snapshot do
       |> Enum.map(fn [mod, test, tags, iter, elapsed] ->
         tags =
           String.split(tags, ",")
-          |> Enum.map(&String.strip/1)
+          |> Enum.map(&String.trim/1)
           |> Enum.reject(&(&1 == ""))
         iter = String.to_integer(iter)
         elapsed = String.to_integer(elapsed)
@@ -108,7 +108,7 @@ defmodule Benchfella.Snapshot do
       "options": #{Json.encode(options)},
       "tests": #{json_encode_tests(tests)}
     }
-    """ |> String.rstrip
+    """ |> String.trim_trailing
   end
 
   def snapshots_to_json(snapshots) when is_list(snapshots) do
