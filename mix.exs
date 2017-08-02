@@ -4,7 +4,7 @@ defmodule Benchfella.Mixfile do
   def project do
     [
       app: :benchfella,
-      version: "0.3.4",
+      version: "0.3.5",
       elixir: "~> 1.0",
       description: description(),
       package: package(),
