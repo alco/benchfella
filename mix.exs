@@ -1,14 +1,17 @@
 defmodule Benchfella.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/alco/benchfella"
+  @version "0.3.5"
+
   def project do
     [
       app: :benchfella,
-      version: "0.3.5",
-      elixir: "~> 1.0",
-      description: description(),
+      version: @version,
+      elixir: "~> 1.3",
       package: package(),
       deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -16,22 +19,29 @@ defmodule Benchfella.Mixfile do
     [applications: []]
   end
 
-  defp description do
-    "Microbenchmarking tool for Elixir."
-  end
-
   defp package do
     [
+      description: "Microbenchmarking tool for Elixir.",
       files: ["lib", "priv", "mix.exs", "README.md", "LICENSE"],
       maintainers: ["Alexei Sholik"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/alco/benchfella",
+        "GitHub" => @source_url
       }
     ]
   end
 
   defp deps do
-    [{:ex_doc, "> 0.0.0", only: :dev}]
+    [{:ex_doc, "> 0.0.0", only: :dev, runtime: false}]
+  end
+
+  defp docs do
+    [
+      extras: [{:"LICENSE", [title: "License"]}, "README.md"],
+      main: "readme",
+      source_url: @source_url,
+      assets: "assets",
+      formatters: ["html"]
+    ]
   end
 end

@@ -1,9 +1,11 @@
 defmodule Mix.Tasks.Bench.Cmp do
   use Mix.Task
 
-  @shortdoc "Compare benchmark snapshots"
+  @shortdoc "Compare benchmark snapshots."
 
   @moduledoc """
+  #{@shortdoc}
+
   ## Usage
 
       mix bench.cmp [options] <snapshot>...

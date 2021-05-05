@@ -1,8 +1,11 @@
 Benchfella
 ==========
 
-[![Hex version](https://img.shields.io/hexpm/v/benchfella.svg "Hex version")](https://hex.pm/packages/benchfella)
-![Hex downloads](https://img.shields.io/hexpm/dt/benchfella.svg "Hex downloads")
+[![Module Version](https://img.shields.io/hexpm/v/benchfella.svg)](https://hex.pm/packages/benchfella)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/benchfella/)
+[![Total Download](https://img.shields.io/hexpm/dt/benchfella.svg)](https://hex.pm/packages/benchfella)
+[![License](https://img.shields.io/hexpm/l/benchfella.svg)](https://github.com/alco/benchfella/blob/master/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/alco/benchfella.svg)](https://github.com/alco/benchfella/commits/master)
 
 Microbenchmarking tool for Elixir.
 
@@ -24,13 +27,15 @@ benchmarking results and determine their credibility.
 
 ## Installation
 
-Add `benchfella` as a dependency to your project:
+Add `:benchfella` as a dependency to your project:
 
 ```elixir
 # in your mix.exs
 
 defp deps do
-  [{:benchfella, "~> 0.3.0"}]
+  [
+    {:benchfella, "~> 0.3.0"}
+  ]
 end
 ```
 
@@ -222,9 +227,10 @@ Wrote bench/graphs/index.html
 $ open bench/graphs/index.html
 ```
 
-![Graph example](bench_graph.png "Graph example")
+![Graph example](./assets/bench_graph.png "Graph example")
 
+## Copyright and License
 
-## License
+Copyright (c) 2014 Alexei Sholik
 
-This software is licensed under [the MIT license](LICENSE).
+This software is licensed under [the MIT license](./LICENSE).

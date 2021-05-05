@@ -4,6 +4,8 @@ defmodule Mix.Tasks.Bench do
   @shortdoc "Microbenchmarking tool for Elixir."
 
   @moduledoc """
+  #{@shortdoc}
+
   ## Usage
 
       mix bench [options] [<path>...]
