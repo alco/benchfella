@@ -1,9 +1,11 @@
 defmodule Mix.Tasks.Bench.Graph do
   use Mix.Task
 
-  @shortdoc "Produce an HTML page with graphs built from given snapshots"
+  @shortdoc "Produce an HTML page with graphs built from given snapshots."
 
   @moduledoc """
+  #{@shortdoc}
+
   ## Usage
 
       mix bench.graph [options] <snapshot>...
