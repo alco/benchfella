@@ -53,7 +53,7 @@ defmodule Benchfella do
 
     System.at_exit(fn
       0 -> run(Keyword.get(opts, :duration, @bench_sec) |> sec2musec,
-                    verbose, format, outdir, collect_mem_stats, sys_mem_stats)
+                    verbose, format, outdir, collect_mem_stats, sys_mem_stats, opts)
       status -> status
     end)
   end
@@ -63,7 +63,7 @@ defmodule Benchfella do
 
   defp log(msg), do: IO.puts(:stderr, msg)
 
-  def run(bench_time, verbose, format, outdir, mem_stats, sys_mem_stats) do
+  def run(bench_time, verbose, format, outdir, mem_stats, sys_mem_stats, opts) do
     #if format == :machine do
       if mem_stats or sys_mem_stats do
         log ">> 'mem stats' flag is currently ignored"
@@ -83,7 +83,7 @@ defmodule Benchfella do
     bench_count = :ets.info(@bench_tab, :size)
     bench_config = {bench_time, mem_stats}
     {total_time, results} = :timer.tc(fn ->
-      prepare_tests_for_running(@bench_tab)
+      prepare_tests_for_running(@bench_tab, opts)
       |> run_grouped_tests(bench_count, verbose, bench_config)
     end)
 
@@ -96,12 +96,27 @@ defmodule Benchfella do
     print_results(results, bench_time, format, outdir, mem_stats, sys_mem_stats)
   end
 
-  defp prepare_tests_for_running(table) do
-    :ets.tab2list(table) |> Enum.group_by(fn {{mod, _test}} -> mod end)
+  defp prepare_tests_for_running(table, opts) do
+    rows = :ets.tab2list(table)
+    all = case opts[:line] do
+            nil ->
+              rows
+            line ->
+              # find closest test
+              first =
+                rows
+                |> Enum.sort(fn({{_, _, line_1}}, {{_, _, line_2}}) ->
+                 abs(opts[:line] - line_1) < abs(opts[:line] - line_2)
+                end)
+                |> List.first()
+              [first]
+          end
+    Enum.group_by(all, fn {{mod, _test, _line}} -> mod end)
   end
 
   # TODO: extract logging from this function and number running tests externally
   defp run_grouped_tests(groups, count, follow, bench_config) do
+    count = groups |> Map.values() |> List.flatten() |> Enum.count()
     {:ok, counter} = Counter.start_link(1)
 
     # for each group we return the list of its results
@@ -132,7 +147,7 @@ defmodule Benchfella do
     end)
   end
 
-  defp run_bench({mod, func}, log_msg_func, config, mod_context) do
+  defp run_bench({mod, func, _line}, log_msg_func, config, mod_context) do
     func_name = bench_func_name(func)
     run_bench_with_context(mod, func_name, mod_context, log_msg_func.(func), fn context ->
       inputs = apply(mod, func_name, [context])
@@ -335,11 +350,11 @@ defmodule Benchfella do
     :timer.tc(mod, f, [n, nil, context | inputs])
   end
 
-  def add_bench(mod, func_name) do
+  def add_bench(mod, func_name, line) do
     validate_name!(inspect(mod))
     validate_name!(mod, Atom.to_string(func_name))
     try do
-      :ets.insert(@bench_tab, {{mod, func_name}})
+      :ets.insert(@bench_tab, {{mod, func_name, line}})
     catch
       :error, :badarg -> raise "Benchfella is not started"
     end
@@ -365,11 +380,11 @@ defmodule Benchfella do
   end
 
   defmacro bench(name, [do: body]) do
-    gen_bench_funcs(name, [], body)
+    gen_bench_funcs(name, [], body, __CALLER__.line)
   end
 
   defmacro bench(name, inputs, [do: body]) do
-    gen_bench_funcs(name, inputs, body)
+    gen_bench_funcs(name, inputs, body, __CALLER__.line)
   end
 
   defmacro setup_all([do: body]) do
@@ -404,7 +419,7 @@ defmodule Benchfella do
     end
   end
 
-  defp gen_bench_funcs(name, inputs, body) do
+  defp gen_bench_funcs(name, inputs, body, line) do
     {vars, values} = Enum.reduce(inputs, {[], []}, fn {name, {func, meta, args}}, {vars, values} ->
       var = Macro.var(name, nil)
       val = {func, meta, args}
@@ -416,11 +431,12 @@ defmodule Benchfella do
       fella: __MODULE__,
       bench_name: name,
       body: Macro.escape(body),
+      line: line,
       values: Macro.escape(values),
       vars: Macro.escape(vars),
       ignored_vars: Macro.escape(ignored_vars)
     ] do
-      fella.add_bench(__MODULE__, String.to_atom(bench_name))
+      fella.add_bench(__MODULE__, String.to_atom(bench_name), line)
 
       func_name = fella.bench_func_name(bench_name)
 

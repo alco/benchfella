@@ -17,6 +17,10 @@ defmodule Mix.Tasks.Bench do
   By default, all files matching `bench/**/*_bench.exs` are executed. Each test will run for as many
   iterations as necessary so that the total running time is at least the specified duration.
 
+  A single benchmark can be run by adding :<linenr> to the end of the filename, like this:
+
+      mix bench bench/test_bench.exs:41
+
   In the end, the number of iterations and the average time of a single iteration are printed to the
   standard output. Additionally, the output in machine format is written to a snapshot file in
   `bench/snapshots/`.
@@ -58,6 +62,7 @@ defmodule Mix.Tasks.Bench do
   def run(args) do
     {paths, options, no_compile} =
       parse_options(args)
+      |> normalize_files()
       |> normalize_options()
 
     prepare_mix_project(no_compile)
@@ -119,6 +124,19 @@ defmodule Mix.Tasks.Bench do
     else
       Benchfella.start()
     end
+  end
+
+  defp normalize_files({[file], opts}) do
+    case Regex.run(~r/^(.+):(\d+)$/, file, capture: :all_but_first) do
+      [file, line_number] ->
+        {[file], Keyword.put(opts, :line, String.to_integer(line_number))}
+      _ ->
+        {[file], opts}
+    end
+  end
+
+  defp normalize_files({paths, opts}) do
+    {paths, opts}
   end
 
   defp normalize_options({paths, opts}) do
