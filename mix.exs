@@ -16,7 +16,10 @@ defmodule Benchfella.Mixfile do
   end
 
   def application do
-    [applications: []]
+    [
+      applications: [],
+      extra_applications: [:eex]
+    ]
   end
 
   defp package do
@@ -37,7 +40,7 @@ defmodule Benchfella.Mixfile do
 
   defp docs do
     [
-      extras: [{:"LICENSE", [title: "License"]}, "README.md"],
+      extras: [{:LICENSE, [title: "License"]}, "README.md"],
       main: "readme",
       source_url: @source_url,
       assets: "assets",
