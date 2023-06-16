@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           mix deps.get
-          deps.compile
+          mix deps.compile
 
       - name: Cache/uncache PLTs
         uses: actions/cache@v3
