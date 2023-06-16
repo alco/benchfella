@@ -27,3 +27,6 @@ benchfella-*.tar
 
 # Misc.
 /bench/snapshots
+
+# Ignore local PLTs
+priv/plts

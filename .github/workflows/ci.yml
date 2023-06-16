@@ -1,0 +1,47 @@
+---
+name: CI
+
+"on":
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test (Elixir ${{ matrix.elixir }} | Erlang/OTP ${{ matrix.otp }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - otp: "25.3"
+            elixir: "1.14"
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Install OTP and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
+
+      - name: Install dependencies
+        run: |
+          mix deps.get
+          deps.compile
+
+      - name: Cache/uncache PLTs
+        uses: actions/cache@v3
+        with:
+          path: |
+            priv/plts
+          key: "${{ runner.os }}-\
+                erlang-${{ matrix.otp }}-\
+                elixir-${{ matrix.elixir }}-\
+                ${{ hashFiles('mix.lock') }}"
+
+      - name: Run Dialyzer
+        run: mix dialyzer
