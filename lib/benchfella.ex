@@ -30,7 +30,9 @@ defmodule Benchfella do
 
     # spawn a zombie process to keep the table alive
     pid = spawn(fn ->
-      receive do end
+      receive do
+        _ -> :ok
+      end
     end)
     :ets.new(@bench_tab, [:public, :named_table, :ordered_set, {:heir, pid, nil}])
 
@@ -507,6 +509,7 @@ defmodule Benchfella do
     |> Enum.take_while(fn {mod, _, _, _} -> mod != __MODULE__ end)
   end
 
+  @spec fatal(String.t()) :: no_return()
   defp fatal(msg) do
     IO.puts :stderr, ["** (Error) ", msg]
     System.halt(1)
