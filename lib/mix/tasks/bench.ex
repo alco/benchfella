@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Bench do
   defp do_load_bench_files([]), do: nil
   defp do_load_bench_files(files) do
     load_bench_helper()
-    Kernel.ParallelRequire.files(files)
+    Kernel.ParallelCompiler.require(files)
   end
 
   @helper_path "bench/bench_helper.exs"
